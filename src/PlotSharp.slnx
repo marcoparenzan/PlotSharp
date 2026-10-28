@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/PlotSharp.Tests/">
+    <Project Path="PlotSharp.Tests/PlotSharp.Tests/PlotSharp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/PlotSharp/">
+    <Project Path="PlotSharp/PlotSharp/PlotSharp.csproj" />
+  </Folder>
+  <Folder Name="/Gallery/">
+    <Project Path="PlotSharp.Gallery/PlotSharp.Gallery/PlotSharp.Gallery.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj" />
+  </Folder>
+</Solution>

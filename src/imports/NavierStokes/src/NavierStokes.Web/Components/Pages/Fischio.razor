@@ -1,0 +1,150 @@
+@page "/fischio"
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Perché il cavo fischia nel vento?</PageTitle>
+
+<p class="eyebrow">Scenario 3 · scia di von Kármán</p>
+<h1>Perché il cavo fischia nel vento? Il camino oscillerà?</h1>
+<p class="lead">
+    Quando il vento investe un cavo, un palo o un camino, dietro l'ostacolo i vortici si staccano alternati, una volta sopra e
+    una volta sotto. Ogni distacco dà una piccola spinta laterale. La frequenza è sorprendentemente regolare:
+    <b>f ≈ 0,2 × velocità del vento / diametro</b>. Se cade nell'udibile, la senti come un fischio.
+    Se coincide con la frequenza propria della struttura, la fa oscillare.
+</p>
+
+<div class="scenario">
+    <div class="panel">
+        <h3>Parametri</h3>
+        <div class="field">
+            <label>Oggetto</label>
+            <select @bind="Preset">
+                <option value="6">Cavo sottile (6 mm)</option>
+                <option value="28">Conduttore di linea elettrica (28 mm)</option>
+                <option value="120">Palo della luce (120 mm)</option>
+                <option value="400">Torre di raffreddamento piccola / tubazione (400 mm)</option>
+                <option value="1500">Camino industriale (1,5 m)</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Diametro <output>@diameterMm mm</output></label>
+            <input type="range" min="2" max="2000" step="1" @bind="diameterMm" @bind:event="oninput" />
+        </div>
+        <div class="field">
+            <label>Vento <output>@windKmh km/h</output></label>
+            <input type="range" min="5" max="120" step="1" @bind="windKmh" @bind:event="oninput" />
+            <div class="hint">@Wind.Beaufort(WindMs)</div>
+        </div>
+        <div class="kpis">
+            <Kpi Value="@Frequency.ToString(Frequency < 10 ? "0.00" : "0")" Label="frequenza [Hz]" />
+            <Kpi Value="@RealRe.ToString("N0")" Label="Reynolds reale" />
+        </div>
+        <button class="btn" @onclick="Start" disabled="@running">@(running ? "Simulazione in corso…" : "Guarda i vortici")</button>
+        @if (running)
+        {
+            <button class="btn secondary" @onclick="Stop">Ferma</button>
+        }
+    </div>
+
+    <div>
+        <div class="answer">
+            @if (Note is { } note)
+            {
+                <div class="big">Fischia a @Frequency.ToString("0") Hz, circa la nota @note</div>
+                <p>I vortici si staccano @Frequency.ToString("0") volte al secondo per lato: abbastanza da essere un suono.
+                   È il "canto" dei fili del telefono e delle antenne nelle giornate di vento.</p>
+            }
+            else if (Frequency < 20)
+            {
+                <div class="big">Oscilla @Frequency.ToString("0.00") volte al secondo</div>
+                <p>
+                    Troppo lento per sentirlo, ma è proprio la gamma in cui vibrano cavi tesi, pali e camini.
+                    Se la frequenza propria della struttura è vicina a questa, entra in risonanza: per questo sulle linee elettriche
+                    si montano gli smorzatori Stockbridge e i camini hanno spesso le "eliche" (strakes) che rompono la regolarità dei vortici.
+                </p>
+            }
+            else
+            {
+                <div class="big">@Frequency.ToString("N0") Hz: ultrasuono</div>
+                <p>Troppo acuto per l'orecchio umano.</p>
+            }
+        </div>
+
+        @if (vorticitySvg is null)
+        {
+            <div class="placeholder">Premi "Guarda i vortici": la simulazione mostra la scia che si forma dietro l'ostacolo.</div>
+        }
+        else
+        {
+            <div class="status">@status</div>
+            <div class="progress"><div style="width:@(progress.ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+            <div class="note">
+                La simulazione gira a Re = @simRe.ToString("0") (il reale è @RealRe.ToString("N0")): a Reynolds più alti la scia diventa più
+                disordinata, ma il ritmo di distacco resta sorprendentemente simile, St ≈ 0,2 da Re ≈ 300 fino a circa 200.000.
+                @if (measuredSt is { } st)
+                {
+                    <span> In questa simulazione abbiamo misurato St = @st.ToString("0.000").</span>
+                }
+            </div>
+            <Chart Svg="@vorticitySvg" />
+            <Chart Svg="@probeSvg" />
+        }
+    </div>
+</div>
+
+@code {
+    private int diameterMm = 28;
+    private int windKmh = 40;
+    private string Preset { get => diameterMm.ToString(); set => diameterMm = int.Parse(value); }
+
+    private double WindMs => windKmh / 3.6;
+    private double Frequency => VortexShedding.Frequency(WindMs, diameterMm / 1000.0);
+    private string? Note => VortexShedding.MusicalNote(Frequency);
+    private double RealRe => Flow.Reynolds(WindMs, diameterMm / 1000.0, Fluid.Air);
+
+    private string? vorticitySvg, probeSvg, status;
+    private double progress, simRe;
+    private double? measuredSt;
+    private bool running;
+    private CancellationTokenSource? cts;
+
+    private async Task Start()
+    {
+        cts?.Cancel();
+        cts = new CancellationTokenSource();
+        var token = cts.Token;
+        running = true;
+        probeSvg = null;
+        measuredSt = null;
+        simRe = Math.Clamp(RealRe, 60, 150);
+        const int steps = 14000;
+        var lbm = new CylinderLbm(simRe);
+        vorticitySvg = Reports.CylinderVorticity(lbm);
+        status = "Avvio…";
+        try
+        {
+            await Task.Run(() => lbm.Run(steps, c =>
+            {
+                vorticitySvg = Reports.CylinderVorticity(c);
+                status = $"passo {c.Step:N0} di {steps:N0}";
+                progress = 100.0 * c.Step / steps;
+                _ = InvokeAsync(StateHasChanged);
+            }, 350, token), token);
+            measuredSt = lbm.Strouhal();
+            probeSvg = Reports.CylinderProbe(lbm);
+            status = "Fatto.";
+            progress = 100;
+        }
+        catch (OperationCanceledException)
+        {
+            status = "Simulazione fermata.";
+        }
+        finally
+        {
+            running = false;
+        }
+    }
+
+    private void Stop() => cts?.Cancel();
+    public void Dispose() => cts?.Cancel();
+}

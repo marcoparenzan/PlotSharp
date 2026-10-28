@@ -1,0 +1,125 @@
+@page "/tubo"
+@rendermode InteractiveServer
+
+<PageTitle>La pompa ce la fa?</PageTitle>
+
+<p class="eyebrow">Scenario 2 · flusso in un tubo</p>
+<h1>La pompa ce la fa? Quanta pressione perdo nel tubo?</h1>
+<p class="lead">
+    Un circuito di raffreddamento, l'irrigazione dell'orto, un impianto idraulico: il fluido strofina contro le pareti e
+    perde pressione lungo il tubo. Se il flusso è ordinato (laminare), Navier-Stokes ha una soluzione esatta: il profilo di
+    velocità è una parabola. Se è turbolento, si usano formule tarate su esperimenti e simulazioni delle stesse equazioni.
+</p>
+
+<div class="scenario">
+    <div class="panel">
+        <h3>Parametri</h3>
+        <div class="field">
+            <label>Fluido</label>
+            <select @bind="fluidName">
+                @foreach (var f in Fluid.All)
+                {
+                    <option value="@f.Name">@f.Name</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Diametro interno <output>@diameterMm mm</output></label>
+            <input type="range" min="4" max="150" step="1" @bind="diameterMm" @bind:event="oninput" />
+        </div>
+        <div class="field">
+            <label>Lunghezza del tubo <output>@lengthM m</output></label>
+            <input type="range" min="1" max="500" step="1" @bind="lengthM" @bind:event="oninput" />
+        </div>
+        <div class="field">
+            <label>Portata <output>@flowLpm l/min</output></label>
+            <input type="range" min="0.5" max="600" step="0.5" @bind="flowLpm" @bind:event="oninput" />
+            <div class="hint">Un rubinetto di casa: ~10 l/min. Una pompa da giardino: 40–60 l/min.</div>
+        </div>
+        <div class="field">
+            <label>Materiale del tubo</label>
+            <select @bind="roughnessMm">
+                <option value="0.0015">Plastica / PE / rame (liscio)</option>
+                <option value="0.045">Acciaio commerciale</option>
+                <option value="0.15">Acciaio zincato</option>
+                <option value="0.26">Ghisa</option>
+            </select>
+        </div>
+    </div>
+
+    <div>
+        <div class="answer">
+            <div class="big">Perdi @((R.PressureDropPa / 1e5).ToString("0.00")) bar</div>
+            <p>
+                Equivalgono a @Head.ToString("0.0") metri di prevalenza: la pompa deve fornire almeno questo, più l'eventuale
+                dislivello e le perdite di curve, valvole e raccordi. La potenza idraulica dissipata è @R.HydraulicPowerW.ToString("0") W.
+            </p>
+        </div>
+        <div class="kpis">
+            <Kpi Value="@($"{R.MeanSpeed:0.00} m/s")" Label="velocità media" />
+            <Kpi Value="@R.Reynolds.ToString("N0")" Label="Reynolds" />
+            <Kpi Value="@R.FrictionFactor.ToString("0.0000")" Label="fattore d'attrito" />
+        </div>
+        <div class="hint" style="margin:-6px 0 14px">Regime: @R.Regime</div>
+        @if (R.MeanSpeed > 3 && Selected != Fluid.Air)
+        {
+            <div class="note">Velocità sopra i 3 m/s: in un impianto reale significa rumore, erosione e colpi d'ariete. Di solito si sceglie un tubo più grande.</div>
+        }
+        <Chart Svg="@ProfileSvg" />
+        <Chart Svg="@CurveSvg" />
+    </div>
+</div>
+
+@code {
+    private string fluidName = Fluid.Water.Name;
+    private int diameterMm = 25;
+    private int lengthM = 50;
+    private double flowLpm = 40;
+    private double roughnessMm = 0.0015;
+
+    private Fluid Selected => Fluid.All.First(f => f.Name == fluidName);
+    private PipeResult R => Pipe.Solve(Selected, diameterMm / 1000.0, lengthM, flowLpm, roughnessMm);
+    private double Head => R.PressureDropPa / (Selected.Density * 9.81);
+
+    private string ProfileSvg
+    {
+        get
+        {
+            var r = R;
+            return Charts.LineChart(new[] { new Charts.Series("Velocità", r.ProfileR, r.ProfileU, Charts.Series1) },
+                new Charts.LineChartOptions
+                {
+                    Title = "Come si muove il fluido nella sezione del tubo",
+                    Subtitle = r.Reynolds < 2300
+                        ? "Laminare: parabola esatta di Hagen-Poiseuille, al centro va al doppio della media"
+                        : "Turbolento: profilo appiattito (legge 1/7), il mescolamento uniforma la velocità",
+                    XLabel = "posizione nella sezione (−1 e 1 = pareti, 0 = centro)",
+                    YLabel = "velocità [m/s]",
+                    YMin = 0,
+                });
+        }
+    }
+
+    private string CurveSvg
+    {
+        get
+        {
+            var fluid = Selected;
+            int n = 80;
+            double qMax = Math.Max(flowLpm * 2, 1);
+            var q = Enumerable.Range(0, n + 1).Select(k => qMax * k / n).ToArray();
+            var dp = q.Select(x => x == 0 ? 0 : Pipe.Solve(fluid, diameterMm / 1000.0, lengthM, x, roughnessMm).PressureDropPa / 1e5).ToArray();
+            double here = R.PressureDropPa / 1e5;
+            return Charts.LineChart(new[] { new Charts.Series("Perdita di pressione", q, dp, Charts.Series1) },
+                new Charts.LineChartOptions
+                {
+                    Title = "Curva dell'impianto: perdita di pressione al variare della portata",
+                    Subtitle = "Raddoppiare la portata costa ben più del doppio della pressione",
+                    XLabel = "portata [l/min]",
+                    YLabel = "perdita [bar]",
+                    YMin = 0,
+                    Highlight = (flowLpm, here, $"{here:0.00} bar"),
+                });
+        }
+    }
+}

@@ -1,0 +1,9 @@
+@* Mostra un grafico SVG generato in C# da NavierStokes.Core.Charts *@
+@if (!string.IsNullOrEmpty(Svg))
+{
+    <div class="chart">@((MarkupString)Svg)</div>
+}
+
+@code {
+    [Parameter] public string? Svg { get; set; }
+}

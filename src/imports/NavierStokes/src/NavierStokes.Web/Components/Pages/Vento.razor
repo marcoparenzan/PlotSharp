@@ -1,0 +1,88 @@
+@page "/vento"
+@rendermode InteractiveServer
+
+<PageTitle>Che forza fa il vento?</PageTitle>
+
+<p class="eyebrow">Scenario 4 · resistenza aerodinamica</p>
+<h1>Che forza fa il vento sul pannello o sull'armadio da esterno?</h1>
+<p class="lead">
+    Il vento che sbatte contro un oggetto cambia direzione e si separa dietro di esso, lasciando una zona di depressione.
+    La differenza di pressione davanti e dietro è la forza: F = ½ · ρ · Cd · A · v².
+    Il coefficiente Cd dipende dalla forma e si ricava in galleria del vento o risolvendo Navier-Stokes al computer.
+</p>
+
+<div class="scenario">
+    <div class="panel">
+        <h3>Parametri</h3>
+        <div class="field">
+            <label>Forma</label>
+            <select @bind="shapeName">
+                @foreach (var s in Shape.All)
+                {
+                    <option value="@s.Name">@s.Name (Cd @s.DragCoefficient)</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label>Superficie esposta <output>@areaM2.ToString("0.0") m²</output></label>
+            <input type="range" min="0.1" max="20" step="0.1" @bind="areaM2" @bind:event="oninput" />
+            <div class="hint">Un pannello fotovoltaico: ~2 m². Un'insegna da negozio: 3–6 m².</div>
+        </div>
+        <div class="field">
+            <label>Vento <output>@windKmh km/h</output></label>
+            <input type="range" min="5" max="200" step="1" @bind="windKmh" @bind:event="oninput" />
+            <div class="hint">Beaufort @Wind.Beaufort(WindMs)</div>
+        </div>
+    </div>
+
+    <div>
+        <div class="answer">
+            <div class="big">@ForceN.ToString("N0") N, come appoggiarci @((ForceN / 9.81).ToString("N0")) kg</div>
+            <p>
+                Ogni volta che la velocità del vento raddoppia, la forza quadruplica: a @((windKmh * 2).ToString()) km/h
+                sarebbero @((ForceN * 4).ToString("N0")) N. È per questo che le raffiche, non il vento medio, dimensionano fissaggi e staffe.
+            </p>
+        </div>
+        <div class="kpis">
+            <Kpi Value="@($"{WindMs:0.0} m/s")" Label="velocità del vento" />
+            <Kpi Value="@($"{0.5 * Fluid.Air.Density * WindMs * WindMs:N0} Pa")" Label="pressione dinamica" />
+            <Kpi Value="@Flow.Reynolds(WindMs, Math.Sqrt(areaM2), Fluid.Air).ToString("0.0e0")" Label="Reynolds (turbolento)" />
+        </div>
+        <Chart Svg="@CurveSvg" />
+        <div class="note">
+            Calcolo didattico: per un dimensionamento reale servono le norme (in Europa l'Eurocodice 1, parte 1-4), che aggiungono
+            raffiche, altezza dal suolo, esposizione del sito e coefficienti di sicurezza.
+        </div>
+    </div>
+</div>
+
+@code {
+    private string shapeName = Shape.FlatPlate.Name;
+    private double areaM2 = 2;
+    private int windKmh = 90;
+
+    private Shape Selected => Shape.All.First(s => s.Name == shapeName);
+    private double WindMs => windKmh / 3.6;
+    private double ForceN => Wind.Force(WindMs, areaM2, Selected);
+
+    private string CurveSvg
+    {
+        get
+        {
+            var shape = Selected;
+            var kmh = Enumerable.Range(0, 101).Select(k => k * 2.0).ToArray();
+            var kg = kmh.Select(v => Wind.Force(v / 3.6, areaM2, shape) / 9.81).ToArray();
+            double here = ForceN / 9.81;
+            return Charts.LineChart(new[] { new Charts.Series("Forza", kmh, kg, Charts.Series1) },
+                new Charts.LineChartOptions
+                {
+                    Title = "La forza cresce con il quadrato della velocità",
+                    Subtitle = $"{shape.Name}, {areaM2:0.0} m²",
+                    XLabel = "vento [km/h]",
+                    YLabel = "forza [kg equivalenti]",
+                    YMin = 0,
+                    Highlight = (windKmh, here, $"{here:N0} kg"),
+                });
+        }
+    }
+}

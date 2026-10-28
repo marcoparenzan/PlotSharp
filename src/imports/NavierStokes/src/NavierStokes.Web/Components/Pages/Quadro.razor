@@ -1,0 +1,162 @@
+@page "/quadro"
+@rendermode InteractiveServer
+@implements IDisposable
+
+<PageTitle>Dove ristagna l'aria nel quadro elettrico?</PageTitle>
+
+<p class="eyebrow">Scenario 1 · cavità con flusso trascinato</p>
+<h1>Dove ristagna l'aria nel quadro elettrico?</h1>
+<p class="lead">
+    Una ventola spinge l'aria lungo il lato superiore del quadro. L'aria sotto viene trascinata e si forma un grande vortice.
+    Ma non tutta l'aria partecipa: in alcune zone resta quasi ferma, e lì i componenti scaldano.
+    È il problema della "cavità con coperchio mobile", il banco di prova classico di chi scrive solutori di Navier-Stokes.
+</p>
+
+<div class="scenario">
+    <div class="panel">
+        <h3>Parametri</h3>
+        <div class="field">
+            <label>Lato del quadro <output>@Side cm</output></label>
+            <input type="range" min="20" max="200" step="5" @bind="Side" @bind:event="oninput" />
+        </div>
+        <div class="field">
+            <label>Velocità dell'aria sotto la ventola <output>@FanSpeed.ToString("0.0") m/s</output></label>
+            <input type="range" min="0.1" max="5" step="0.1" @bind="FanSpeed" @bind:event="oninput" />
+        </div>
+        <div class="field">
+            <label>Fluido</label>
+            <select @bind="FluidName">
+                <option value="Aria">Aria (quadro elettrico)</option>
+                <option value="Acqua">Acqua (vasca con agitatore in superficie)</option>
+                <option value="Olio">Olio (trasformatore in bagno d'olio)</option>
+            </select>
+        </div>
+        <div class="kpis">
+            <Kpi Value="@RealRe.ToString("N0")" Label="Reynolds reale" />
+            <Kpi Value="@SimRe.ToString("N0")" Label="Reynolds simulato" />
+        </div>
+        <div class="hint" style="margin-bottom:12px">Regime reale: @Flow.Regime(RealRe, 1000, 5000)</div>
+        <button class="btn" @onclick="Start" disabled="@running">@(running ? "Simulazione in corso…" : "Avvia simulazione")</button>
+        @if (running)
+        {
+            <button class="btn secondary" @onclick="Stop">Ferma</button>
+        }
+    </div>
+
+    <div>
+        @if (velocitySvg is null)
+        {
+            <div class="placeholder">Scegli i parametri e avvia: vedrai il vortice formarsi in tempo reale.</div>
+        }
+        else
+        {
+            <div class="status">@status</div>
+            <div class="progress"><div style="width:@(progress.ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+            @if (stagnantShare is { } share)
+            {
+                <div class="answer">
+                    <div class="big">@share.ToString("0")% dell'aria è quasi ferma</div>
+                    <p>
+                        In questa porzione del quadro l'aria si muove a meno del 10% della velocità della ventola
+                        (sotto @((0.1 * FanSpeed).ToString("0.00")) m/s). Sono soprattutto gli angoli in basso e il centro del vortice:
+                        i componenti più caldi andrebbero tenuti lontano da lì, oppure serve un deflettore o un secondo ingresso d'aria.
+                    </p>
+                </div>
+            }
+            @if (SimRe < RealRe * 0.999)
+            {
+                <div class="note">
+                    Con questi parametri il flusso reale ha Re ≈ @RealRe.ToString("N0") ed è turbolento: simularlo richiederebbe
+                    griglie enormi. Qui giriamo a Re = @SimRe.ToString("N0") per mostrare la struttura del moto: il vortice principale e
+                    le zone morte negli angoli restano, la turbolenza in più rimescola meglio il centro ma non "pulisce" gli angoli.
+                </div>
+            }
+            <Chart Svg="@velocitySvg" />
+            <Chart Svg="@pressureSvg" />
+            <Chart Svg="@energySvg" />
+        }
+    </div>
+</div>
+
+@code {
+    private int side = 80;
+    private double fanSpeed = 1.5;
+    private string fluidName = "Aria";
+
+    private int Side { get => side; set { side = value; } }
+    private double FanSpeed { get => fanSpeed; set { fanSpeed = value; } }
+    private string FluidName { get => fluidName; set { fluidName = value; } }
+
+    private Fluid SelectedFluid => fluidName switch { "Acqua" => Fluid.Water, "Olio" => Fluid.Oil, _ => Fluid.Air };
+    private double RealRe => Flow.Reynolds(fanSpeed, side / 100.0, SelectedFluid);
+    private double SimRe => Math.Clamp(RealRe, 10, 400);
+
+    private string? velocitySvg, pressureSvg, energySvg;
+    private string status = "";
+    private double progress;
+    private double? stagnantShare;
+    private bool running;
+    private CancellationTokenSource? cts;
+
+    private async Task Start()
+    {
+        cts?.Cancel();
+        cts = new CancellationTokenSource();
+        var token = cts.Token;
+        running = true;
+        pressureSvg = energySvg = null;
+        stagnantShare = null;
+        double re = SimRe, u = fanSpeed, L = side / 100.0;
+        const int maxSteps = 15000;
+        var solver = new CavitySolver(61, re);
+        velocitySvg = Reports.CavityVelocity(solver, "Avvio…");
+        status = "Avvio della simulazione…";
+
+        try
+        {
+            await Task.Run(() => solver.Run(maxSteps, 1e-5, s =>
+            {
+                // Tempo reale: il solutore lavora in unità adimensionali (lato 1, velocità 1)
+                double tReal = s.Time * L / u;
+                velocitySvg = Reports.CavityVelocity(s, $"Re = {re:0} · tempo reale ≈ {tReal:0.0} s");
+                status = $"passo {s.Step:N0} · energia {s.KineticEnergy():0.00000}";
+                progress = Math.Min(100, 100.0 * s.Step / maxSteps);
+                _ = InvokeAsync(StateHasChanged);
+            }, 300, token), token);
+
+            double tEnd = solver.Time * L / u;
+            velocitySvg = Reports.CavityVelocity(solver, $"Re = {re:0} · regime raggiunto dopo ≈ {tEnd:0.0} s reali");
+            pressureSvg = Reports.CavityPressure(solver);
+            energySvg = Reports.CavityEnergy(solver, L / u);
+            stagnantShare = StagnantShare(solver, 0.1);
+            status = $"Fatto: {solver.Step:N0} passi, divergenza RMS {solver.RmsDivergence():0.0e0}";
+            progress = 100;
+        }
+        catch (OperationCanceledException)
+        {
+            status = "Simulazione fermata.";
+        }
+        finally
+        {
+            running = false;
+        }
+    }
+
+    private void Stop() => cts?.Cancel();
+
+    /// <summary>Percentuale dell'area interna dove la velocità è sotto una soglia (frazione della velocità ventola).</summary>
+    private static double StagnantShare(CavitySolver s, double threshold)
+    {
+        var speed = s.Speed();
+        int count = 0, total = 0;
+        for (int j = 1; j < s.N - 1; j++)
+        for (int i = 1; i < s.N - 1; i++)
+        {
+            total++;
+            if (speed[j, i] < threshold * s.LidSpeed) count++;
+        }
+        return 100.0 * count / total;
+    }
+
+    public void Dispose() => cts?.Cancel();
+}

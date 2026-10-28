@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Matematica quantistica a dimensione finita su Complex&lt;T&gt; di .NET 11: ket, operatori, Pauli, evoluzione temporale, matrice densità, generici su float, double e Decimal32/64/128.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../MathemaSharp.Core/MathemaSharp.Core.csproj" />
+  </ItemGroup>
+</Project>

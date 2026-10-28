@@ -1,0 +1,1 @@
+<Project><Target Name="Collect"><Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)collect-plotsharp.ps1&quot;" /></Target></Project>
