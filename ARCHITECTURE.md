@@ -2,7 +2,7 @@
 
 ## Layout
 
-- `src/PlotSharp.slnx`: soluzione attiva .NET 10.
+- `src/PlotSharp.slnx`: soluzione attiva .NET 11.
 - `src/PlotSharp/PlotSharp/`: libreria, API Charts e renderer SVG.
 - `src/PlotSharp.Tests/PlotSharp.Tests/`: test xUnit.
 - `src/imports/<origine>/`: archivio immutato, escluso dalla soluzione.

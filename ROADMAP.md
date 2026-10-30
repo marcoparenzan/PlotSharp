@@ -8,6 +8,17 @@ Una libreria di visualizzazione condivisa, indipendente da host e librerie matem
 
 Target attuale dei progetti attivi: .NET 11 RC3 (snapshot importati esclusi). Output attivo: SVG/HTML statico.
 
+### Stato corrente riallineato — 2026-10-29
+
+Questa sezione prevale sulle tabelle e sulle note storiche più avanti (R01 della ROADMAP.md di `Science`).
+
+- **Baseline:** gate `--no-images` rieseguito, tutti i 31 passi exit 0 (più `skip-report`), report `D:\Dev\BuildArtifacts\ecosystem-validation\20261028-230541`. Suite `PlotSharp.Tests` rieseguita separatamente: **227/227**. PySharp nello stesso gate: 1507 passati, 0 falliti, 13 sospesi (12 PostgreSQL non raggiungibile, 1 download pretrained opt-in): non contati come passati.
+- **Condiviso e già consumato:** line/scatter e FieldPlot di NavierStokes (palette, encoder RGB8, sampler a nodi, limiti colore, frecce, colorbar, layout, assemblaggio, contour); contour lineari, sampler fisico e selezione bande di NDSharp.Plot; otto notebook MathemaSharp.
+- **Ancora locale nei consumatori:** palette/alpha/raster nativo e renderer Skia di NDSharp.Plot, Figure/Axes/Artists, notebook dell'articolo NavierStokes, renderer legacy MathemaSharp conservato nei percorsi non migrati.
+- **Dipendenze effettive verso PlotSharp** (ProjectReference nei sorgenti attivi): `NDSharp.Plot`, `NavierStokes.Core`, oltre a `PlotSharp.Tests` e `PlotSharp.Gallery`. MathemaSharp consuma tramite facade source-build opt-in.
+- **Invariato:** 0/4 famiglie complete, nessun pacchetto pubblicato, diritti (P02/B01) non risolti.
+- **Controllo di versione:** il repository è sotto git dal 2026-10-29 (commit di baseline `dfc7b2b`).
+
 Aggiornamento 2026-10-28: gate ecosistema eseguito con successo, inclusi i due piloti NuGet. Aggiunto in MathemaSharp il pilota opt-in `03-indexed-charts.ipynb` e la facade `notebooks/shared/PlotSharpCharts.csx`: Lines, Panels e Stems delegano a IndexedCharts, quattro SVG eseguiti e validati XML. Non equivale a migrazione completa di MathemaSharp: renderer legacy conservato, dati non finiti e layout non equivalenti, verifica visiva ancora aperta. I conteggi locali sotto sono la baseline storica di PlotSharp; il gate centrale è documentato in MathemaSharp/ROADMAP.md. PNG/Skia e compatibilità Figure/Axes sono da consolidare, non già disponibili.
 
 ### Baseline completa aggiornata — D03 sampler/bande
@@ -159,15 +170,15 @@ MathemaSharp/Core/03-complex-signals.ipynb usa il bootstrap PlotSharp invece del
 |---|---|---|
 | Nucleo SVG condiviso | **Parziale, funzionante** | Line/scatter, indexed/panels, stems/bar, heatmap/colorbar/mask/extent, contour/quiver di base |
 | Consolidamento di tutto il patrimonio Charts | **Non completato** | Mancano matrice API esaustiva, backend PNG, Figure/Axes, layout e ulteriori artist |
-| Validazione automatizzata della soluzione attiva | **Verificata per il perimetro implementato** | Build riuscita, 94 test xUnit passanti (inclusi sette casi del consumatore NavierStokes); galleria di 8 esempi baseline storica, notebook applicativi validati separatamente |
+| Validazione automatizzata della soluzione attiva | **Verificata per il perimetro implementato** | Build riuscita, 227 test xUnit passanti (verificato 2026-10-29, inclusi casi dei consumatori NavierStokes e NDSharp); galleria di 8 esempi baseline storica, notebook applicativi validati separatamente |
 | Verifica visiva | **Preliminare, parziale** | Otto raster precedenti e 19 raster 06/08 osservati; 43 SVG verificati in Edge; tre screenshot corretti, 11 STL/tour e due dashboard assemblate osservati. Popup OS, target sovrapposti e VS Code restano aperti |
 | Notebook end-to-end | **Parziale, eseguito** | Tre piloti JupyterSharp e otto notebook applicativi JupyterNet; XML verificato, revisione visiva parziale |
-| Adozione nei repository di origine | **0/4 complete, D01 parziale** | Core/03, TimeSeries/06–10 e scenari A1/D1 MathemaSharp migrati e verificati; altri percorsi e famiglie aperti |
-| Dipendenze attive interne | **2 consumatori** | PlotSharp.Tests e PlotSharp.Gallery riferiscono la libreria |
+| Adozione nei repository di origine | **0/4 complete; D01–D03 parziali, D04 solo piloti** | Core/03, TimeSeries/06–10 e scenari A1/D1 MathemaSharp migrati e verificati; altri percorsi e famiglie aperti |
+| Dipendenze attive | **2 interne, 2 esterne** | PlotSharp.Tests e PlotSharp.Gallery nella soluzione; NDSharp.Plot e NavierStokes.Core referenziano la libreria dai propri repository |
 | Distribuzione | **Bloccata** | Diritti NavierStokes/MathemaSharp da confermare; nessun package pubblicato |
 | Documentazione | **Presente, da mantenere** | README, USAGE/Reference, ARCHITECTURE, questo registro |
 
-**Completamento globale: non raggiunto e non espresso in percentuale.** Il denominatore delle API originali non è ancora completo. I 70 test non costituiscono una misura di copertura di tutto il patrimonio importato. Il rapporto 0/4 misura solo l'adozione delle quattro famiglie note, non il completamento del prodotto.
+**Completamento globale: non raggiunto e non espresso in percentuale.** Il denominatore delle API originali non è ancora completo. I 227 test non costituiscono una misura di copertura di tutto il patrimonio importato. Il rapporto 0/4 misura solo l'adozione delle quattro famiglie note, non il completamento del prodotto.
 
 ### Stati usati
 
@@ -198,7 +209,7 @@ P01 rimane **in corso**. D01 e D02 sono parziali; D03/D04 non completate, 0/4 mi
 | P02 | Diritti e attribuzioni | Bloccato | P01 | Licenze verificate per tutto il codice estratto; notice di terzi e autorizzazioni presenti; decisione documentata sulla licenza del package |
 | P03 | Contratto pubblico del nucleo | In corso | P01 | Serie, assi, layout, stili, dati non finiti, precisione e serializzazione/export definiti; API/versionamento e compatibilità documentati; test di contratto |
 | P04 | Consolidamento renderer SVG | In corso | P03 | Funzionalità SVG selezionate equivalenti o differenze approvate; casi numerici/geometrici e layout verificati; duplicati destinati a facade anziché nuovi motori |
-| P05 | Consolidamento NDSharp.Plot e raster | Da iniziare | P01, P03 | Figure/Axes/Artists, PNG/Skia, font, tick/layout e adattamento NDArray separati coerentemente; test originali pertinenti eseguiti o sostituiti con equivalenti; piattaforme native verificate |
+| P05 | Consolidamento NDSharp.Plot e raster | In corso (D03 parziale: contour/sampler/bande) | P01, P03 | Figure/Axes/Artists, PNG/Skia, font, tick/layout e adattamento NDArray separati coerentemente; test originali pertinenti eseguiti o sostituiti con equivalenti; piattaforme native verificate |
 | P06 | Qualità visiva e gallery notebook | In corso | P04 | Gallery rappresentativa controllata visivamente; notebook eseguiti nei kernel supportati; report artefatti/regressioni; tutti i test del perimetro passanti |
 | P07 | Adattatori e compatibilità consumatori | Da iniziare | P03, P04, P05 secondo API usate | Adattatori NDArray/display/Blazor o facade solo dove necessari; dipendenze unidirezionali; test integrazione; nessuna dipendenza del core da app o kernel |
 | P08 | Adozione e dismissione duplicati | Da iniziare | P07, P06, P02 per trasferimento/distribuzione | Registro D01–D04 chiuso: build/test/esempi nei repository reali, chart locali sostituiti o residui motivati, documentazione aggiornata |
@@ -221,11 +232,11 @@ Una release sperimentale del sottoinsieme può precedere P05/P08, ma deve dichia
 | Area | Stato nella libreria attiva | Consolidamento / lavoro residuo |
 |---|---|---|
 | Linee, scatter, tick/assi base | Implementato e testato | Da confrontare con tutte le API originali; precisione double e layout ancora limitati |
-| Serie indicizzate, Start, dashed, pannelli | Implementato e testato | Facade ispirata a MathemaSharp; differenza NaN reject vs gap; nessun notebook migrato |
+| Serie indicizzate, Start, dashed, pannelli | Implementato e testato | Facade ispirata a MathemaSharp; default NaN reject, gap opt-in (AllowLineGaps); usata dagli otto notebook MathemaSharp migrati |
 | Stems/correlogrammi | Implementato e testato | Baseline zero/banda; scala non forzata simmetrica; compatibilità visiva originale da verificare |
 | Barre verticali | Implementato e testato | Raggruppamento, stacking, categorie e varianti NDSharp non consolidati |
 | Heatmap, colorbar, mask, extent | Implementato e testato | SVG a celle, no raster/interpolazione; aspect ratio fisico e palette divergente mancanti |
-| Contour | Base implementata e testata | Marching squares NavierStokes con pairing fisso saddle; niente decider, stitching, fill o label; non equivalenza NDSharp contour completa |
+| Contour | Base implementata e testata | Marching squares condiviso da NavierStokes e dai contour lineari NDSharp.Plot (overload di compatibilità), pairing fisso a sella; niente decider, stitching, fill o label. Per contourf sono condivisi solo sampler fisico e selezione bande; palette/alpha/Skia restano in NDSharp |
 | Quiver | Base implementata e testata | Geometria adattata NDSharp, scala esplicita; no autoscale/streamlines; unità pixel anziché points/DPI |
 | Figure/Axes/Artists | Non consolidato | Snapshot NDSharp; modello pubblico e facade da decidere |
 | PNG/Skia, font, tight_layout e layout avanzato | Non consolidato | Snapshot NDSharp e encoder NavierStokes da confrontare; dipendenze native/licenze da verificare |
@@ -242,7 +253,7 @@ Il materiale in `src/imports/` resta archivio immutato ed escluso dalla soluzion
 
 | ID | Progetto | Relazione | Stato / evidenza |
 |---|---|---|---|
-| I01 | PlotSharp.Tests | ProjectReference → PlotSharp e PlotSharp.Inventory | Attivo, 70 test passanti nell'ultima verifica |
+| I01 | PlotSharp.Tests | ProjectReference → PlotSharp e PlotSharp.Inventory | Attivo, 227 test passanti (verificato 2026-10-29) |
 | I02 | PlotSharp.Gallery | ProjectReference → PlotSharp | Attivo, 8 esempi generati e validati XML; visuale non verificata |
 
 Tool aggiunto alla soluzione: `src/tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj`, **non dipende da PlotSharp** e non è un nuovo consumatore Charts.
@@ -256,9 +267,9 @@ La tabella descrive ciò che è osservabile negli snapshot, **non uno scan aggio
 | ID | Famiglia / componenti da seguire | Dipendenza chart osservata | Stato adozione | Prossimo deliverable / blocchi |
 |---|---|---|---|---|
 | D01 | MathemaSharp: notebook/shared/Charts.csx, notebook TimeSeries/Core; app Lab/Docs da valutare | Helper SVG con Display.Html; MathemaSharp.NDSharp riferisce NDSharp (non prova adozione NDSharp.Plot) | **Parziale** | Otto notebook/43 SVG e due dashboard migrati; helper presentazione condivisi, app senza renderer locale nei sorgenti ispezionati. Completare inventario/API/asset, precisione e licenze |
-| D02 | NavierStokes.Core, NavierStokes.Cli, NavierStokes.Web, notebook | Charts/Reports in Core; Cli e Web → Core; Web/Shared/Chart.razor mostra SVG | **Parziale** | Line/scatter Core delegati, CLI/Web build e selftest passati, tre report Edge smoke verificati; migrare campi/PNG/contour; home/tubo/vento Web smoke passato, completare quadro/fischio/UI/notebook; diritti ancora aperti |
-| D03 | NDSharp.Plot, NDSharp.Plot.Tests, NDSharp.Notebooks, NDSharp.Notebooks.Tests; notebook 11/12 | Plot → NDSharp + Skia; Notebooks → Plot; i due progetti Tests → relativi progetti | **Parziale: line-contour geometry delegata** | ProjectReference e adapter fisico/core comune, baseline18/18 ND e204/204 shared verdi. Servono full gate/notebook, Figure/Axes/raster/NDArray e restante compatibilità/distribuzione |
-| D04 | JupyterSharp.Engine/Host/kernel, samples, vscode-extension runtime | Host → Engine; Engine → kernel; DLL NDSharp.Plot e PySharpLib.Matplotlib raccolte nel runtime pysharp | **Non iniziata** | Identificare tutti i punti di display/caricamento/distribuzione, integrare assembly/MIME PlotSharp, eseguire smoke test kernel; sorgenti PySharpLib.Matplotlib non raccolte |
+| D02 | NavierStokes.Core, NavierStokes.Cli, NavierStokes.Web, notebook | Charts/Reports in Core; Cli e Web → Core; Web/Shared/Chart.razor mostra SVG | **Parziale** | Line/scatter e FieldPlot (palette, PNG RGB8, sampler, limiti colore, frecce, colorbar, layout, contour) delegati; CLI/Web build, smoke UI (home/tubo/vento, quadro, fischio, mobile) e selftest numerico passati nel gate. Restano notebook dell'articolo, percorsi UI non coperti, accessibilità completa e diritti |
+| D03 | NDSharp.Plot, NDSharp.Plot.Tests, NDSharp.Notebooks, NDSharp.Notebooks.Tests; notebook 11/12 | Plot → NDSharp + Skia; Notebooks → Plot; i due progetti Tests → relativi progetti | **Parziale: contour lineari, sampler e bande delegati** | ProjectReference e adapter fisico/core comune; ND 19/19 e shared 227/227 (da roadmap, shared riverificato), notebook contour reale nel kernel source-build, gate verde. Restano palette/alpha/Skia, Figure/Axes/raster/NDArray, altre categorie, NDSharp.Notebooks e distribuzione |
+| D04 | JupyterSharp.Engine/Host/kernel, samples, vscode-extension runtime | Host → Engine; Engine → kernel; DLL NDSharp.Plot e PySharpLib.Matplotlib raccolte nel runtime pysharp | **Piloti eseguiti; integrazione display nativa non iniziata** | Identificare tutti i punti di display/caricamento/distribuzione, integrare assembly/MIME PlotSharp, eseguire smoke test kernel; sorgenti PySharpLib.Matplotlib non raccolte |
 
 PySharpLib.Matplotlib è una **dipendenza/integrazione da investigare**, non una quinta famiglia migrata o un progetto sorgente disponibile qui. Non è sufficiente sostituire la DLL raccolta.
 
@@ -290,7 +301,7 @@ Non sono automaticamente fuori scope PNG, 3D o artist avanzati solo perché manc
 
 ## 7. Evidenze e aggiornamento del registro
 
-Baseline storica: `src/PlotSharp.slnx`, 70 test e gallery di otto esempi XML. Non è il totale corrente: 94 test, inclusi sette casi di integrazione con NavierStokes.Core attivo (non snapshot). Evidenze correnti nel gate sopra; gli snapshot restano esclusi dalla soluzione, report consumer/visuali hanno perimetri distinti e non dimostrano copertura dell'intero patrimonio importato.
+Baseline storica: `src/PlotSharp.slnx`, 70 test e gallery di otto esempi XML. Totale corrente verificato il 2026-10-29: 227 test, inclusi i casi di integrazione con NavierStokes.Core e NDSharp.Plot attivi (non snapshot). Evidenze correnti nel gate sopra; gli snapshot restano esclusi dalla soluzione, report consumer/visuali hanno perimetri distinti e non dimostrano copertura dell'intero patrimonio importato.
 
 ```sh
 dotnet build src/PlotSharp.slnx

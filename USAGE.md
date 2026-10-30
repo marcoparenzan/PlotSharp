@@ -1,5 +1,28 @@
 # Usage
 
+## Installation
+
+PlotSharp is a **library** plus the global tool **`plotsharp`**. Requires the **.NET 11 SDK**.
+
+```powershell
+dotnet add package PlotSharp --source D:\Dev\NuGetLocalFeed --prerelease
+```
+
+### The `plotsharp` tool
+
+```powershell
+dotnet tool install --global PlotSharp.Cli --add-source D:\Dev\NuGetLocalFeed --prerelease
+plotsharp line data.csv --x day --y a,b --title Demo --out chart.svg
+plotsharp scatter data.csv --x a --y b --out scatter.svg
+plotsharp selftest
+```
+
+Options: `--title`, `--xlabel`, `--ylabel`, `--width`, `--height`, `--sep`. Without `--out` the SVG goes to standard output. In a line
+chart an empty or non-numeric cell becomes a gap; scatter drops such rows. Exit codes: 0 ok, 1 unknown command, 2 usage or input error.
+
+Build and test from source: `dotnet build src/PlotSharp.slnx` and `dotnet test src/PlotSharp.slnx`. Most users get PlotSharp
+indirectly through `NDSharp.Plot`. The suite installer can download the package: `D:\Dev\Science\ScienceSharp\Install-Suite.ps1 -Download`.
+
 ## Current complete baseline after ND filled sampling/bands
 
 Science gate --no-images D:\Dev\BuildArtifacts\ecosystem-validation\20261028-215324 passed31/31 after the latest ND sampler/band changes. All build/test/audit/kernel/notebook/UI/browser/numerical checks ran; no new review image files or screenshots, encoded notebook outputs and in-memory QA retained.
