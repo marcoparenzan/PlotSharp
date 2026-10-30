@@ -1,26 +1,29 @@
+using System.Numerics;
+
 namespace PlotSharp;
 
 /// <summary>Shared cell traversal/interpolation; callers own validation and their historical edge convention.</summary>
 internal static class ContourKernel
 {
-    internal static IReadOnlyList<Charts.Segment> Trace(int rows, int columns, Func<int, int, double> sample,
-        Func<int, double> x, Func<int, double> y, double level, bool[,]? mask,
+    internal static IReadOnlyList<Charts.Segment<T>> Trace<T>(int rows, int columns, Func<int, int, T> sample,
+        Func<int, T> x, Func<int, T> y, T level, bool[,]? mask,
         bool forwardOppositeEdges, bool preserveDegenerate, bool skipNonFiniteCornerSum)
+        where T : INumber<T>
     {
-        var segments = new List<Charts.Segment>();
+        var segments = new List<Charts.Segment<T>>();
         for (int row = 0; row + 1 < rows; row++)
             for (int col = 0; col + 1 < columns; col++)
             {
                 if (mask?[row, col] == true || mask?[row, col + 1] == true || mask?[row + 1, col] == true || mask?[row + 1, col + 1] == true) continue;
-                double a = sample(row, col), b = sample(row, col + 1), c = sample(row + 1, col + 1), d = sample(row + 1, col);
+                T a = sample(row, col), b = sample(row, col + 1), c = sample(row + 1, col + 1), d = sample(row + 1, col);
                 // Preserve NDSharp's summed-corner test, including overflow of individually finite values.
-                if (skipNonFiniteCornerSum && !double.IsFinite(a + b + c + d)) continue;
-                double x0 = x(col), x1 = x(col + 1), y0 = y(row), y1 = y(row + 1);
-                var points = new List<(double X, double Y)>(4);
-                void Edge(double v1, double v2, double px1, double py1, double px2, double py2)
+                if (skipNonFiniteCornerSum && !T.IsFinite(a + b + c + d)) continue;
+                T x0 = x(col), x1 = x(col + 1), y0 = y(row), y1 = y(row + 1);
+                var points = new List<(T X, T Y)>(4);
+                void Edge(T v1, T v2, T px1, T py1, T px2, T py2)
                 {
                     if ((v1 < level) == (v2 < level)) return;
-                    double t = (level - v1) / (v2 - v1);
+                    T t = (level - v1) / (v2 - v1);
                     points.Add((px1 + t * (px2 - px1), py1 + t * (py2 - py1)));
                 }
                 Edge(a, b, x0, y0, x1, y0);
@@ -42,5 +45,12 @@ internal static class ContourKernel
                 }
             }
         return segments;
+    }
+
+    internal static IReadOnlyList<Charts.Segment> ToDouble(IReadOnlyList<Charts.Segment<double>> segments)
+    {
+        var result = new Charts.Segment[segments.Count];
+        for (int i = 0; i < result.Length; i++) result[i] = new(segments[i].X1, segments[i].Y1, segments[i].X2, segments[i].Y2);
+        return result;
     }
 }

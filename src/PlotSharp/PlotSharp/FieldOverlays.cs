@@ -6,6 +6,8 @@ namespace PlotSharp;
 public static partial class Charts
 {
     public sealed record Segment(double X1, double Y1, double X2, double Y2);
+    /// <summary>Segment in the caller's own number type (generic-math contour kernels).</summary>
+    public sealed record Segment<T>(T X1, T Y1, T X2, T Y2);
     public sealed record VectorField(double[,] U, double[,] V, double Scale = 1, int Stride = 1, string Color = "#0b0b0b");
 
     /// <summary>NavierStokes marching squares adapted with validation and masks. Coordinates are sample indices.</summary>
@@ -17,8 +19,8 @@ public static partial class Charts
     {
         ValidateSamples(field, mask);
         if (!double.IsFinite(level) || Math.Abs(level) > 1e12) throw new ArgumentOutOfRangeException(nameof(level));
-        return ContourKernel.Trace(field.GetLength(0), field.GetLength(1), (r, c) => field[r, c], c => c, r => r,
-            level, mask, forwardOppositeEdges: false, preserveDegenerate: preserveDegenerateSegments, skipNonFiniteCornerSum: false);
+        return ContourKernel.ToDouble(ContourKernel.Trace(field.GetLength(0), field.GetLength(1), (r, c) => field[r, c], c => (double)c, r => (double)r,
+            level, mask, forwardOppositeEdges: false, preserveDegenerate: preserveDegenerateSegments, skipNonFiniteCornerSum: false));
     }
 
     private static void ValidateSamples(double[,] field, bool[,]? mask)

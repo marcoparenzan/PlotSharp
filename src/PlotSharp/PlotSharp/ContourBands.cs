@@ -1,21 +1,35 @@
+using System.Numerics;
+
 namespace PlotSharp;
 
 /// <summary>NDSharp-compatible inclusive band lookup and midpoint normalization; no palette, alpha or raster rendering.</summary>
 public sealed class ContourBands
 {
-    private readonly double[] levels;
+    private readonly ContourBands<double> inner;
 
-    public ContourBands(double[] levels)
+    public ContourBands(double[] levels) => inner = new(levels);
+
+    public int Find(double value) => inner.Find(value);
+
+    public double NormalizedMidpoint(int band) => inner.NormalizedMidpoint(band);
+}
+
+/// <summary>Generic-math form of <see cref="ContourBands"/>; same rules, in the caller's own number type.</summary>
+public sealed class ContourBands<T> where T : INumber<T>
+{
+    private readonly T[] levels;
+
+    public ContourBands(T[] levels)
     {
         ArgumentNullException.ThrowIfNull(levels);
         if (levels.Length == 0) throw new ArgumentException("At least one level required.", nameof(levels));
         for (int i = 0; i < levels.Length; i++)
-            if (!double.IsFinite(levels[i]) || i > 0 && levels[i] < levels[i - 1])
+            if (!T.IsFinite(levels[i]) || i > 0 && levels[i] < levels[i - 1])
                 throw new ArgumentException("Levels must be finite and nondecreasing.", nameof(levels));
         this.levels = levels.ToArray();
     }
 
-    public int Find(double value)
+    public int Find(T value)
     {
         int band = -1;
         for (int k = 0; k + 1 < levels.Length; k++)
@@ -27,11 +41,11 @@ public sealed class ContourBands
         return band;
     }
 
-    public double NormalizedMidpoint(int band)
+    public T NormalizedMidpoint(int band)
     {
         if (band < 0 || band >= levels.Length - 1) throw new ArgumentOutOfRangeException(nameof(band));
-        double mid = (levels[band] + levels[band + 1]) / 2, lo = levels[0], hi = levels[^1];
+        T mid = (levels[band] + levels[band + 1]) / (T.One + T.One), lo = levels[0], hi = levels[^1];
         // Original arithmetic retained, including overflow/NaN propagation to the caller's color policy.
-        return hi == lo ? 0 : (mid - lo) / (hi - lo);
+        return hi == lo ? T.Zero : (mid - lo) / (hi - lo);
     }
 }
