@@ -1,91 +1,91 @@
-# Contratti pubblici dei kernel condivisi (R05 / N3)
+# Public contracts of the shared kernels (R05 / N3)
 
-Stato al 2026-10-29. Descrive il comportamento **osservato e coperto da test**, non un comportamento ideale. Dove differisce da matplotlib è indicato; dove la scelta spetta all'autore è marcato **DECIDERE**. Fonti: `RectilinearContours`, `RectilinearFieldSampler`, `ContourBands`, `Charts.MarchingSquares` in questo repository; `ContourArtist` in `NDSharp/src/NDSharp.Plot/Contour.cs`.
+State as of 2026-10-29. Describes the behaviour **observed and covered by tests**, not an ideal behaviour. Where it differs from matplotlib this is indicated; where the choice belongs to the author it is marked **DECIDE**. Sources: `RectilinearContours`, `RectilinearFieldSampler`, `ContourBands`, `Charts.MarchingSquares` in this repository; `ContourArtist` in `NDSharp/src/NDSharp.Plot/Contour.cs`.
 
-## 1. Convenzioni di coordinate
+## 1. Coordinate conventions
 
-| Kernel | Convenzione | Note |
+| Kernel | Convention | Notes |
 |---|---|---|
-| `RectilinearContours.Trace(xs, ys, z, level)` | **Nodi** in coordinate **fisiche**. `z` row-major, `ys.Length` righe × `xs.Length` colonne. Il segmento interpola linearmente sul lato fisico della cella. | Una colonna/riga singola non ha celle: risultato vuoto. |
-| `RectilinearFieldSampler.Sample(x, y)` | Interpolazione **bilineare** su cella fisica; ascissa in `xs`, ordinata in `ys`. | Fuori dal dominio la cella è bloccata alla più vicina e il peso **estrapola linearmente** (non satura). |
-| `Charts.MarchingSquares(field, …)` (Navier) | **Indici di campione**: x = colonna, y = riga. | Nessuna coordinata fisica; il consumatore proietta. |
-| `ContourBands.Find` | Valore → indice di banda, estremi inclusivi. | Vedi §4. |
+| `RectilinearContours.Trace(xs, ys, z, level)` | **Nodes** in **physical** coordinates. `z` row-major, `ys.Length` rows × `xs.Length` columns. The segment interpolates linearly on the physical side of the cell. | A single column/row has no cells: empty result. |
+| `RectilinearFieldSampler.Sample(x, y)` | **Bilinear** interpolation on a physical cell; abscissa in `xs`, ordinate in `ys`. | Outside the domain the cell is clamped to the nearest one and the weight **extrapolates linearly** (it does not saturate). |
+| `Charts.MarchingSquares(field, …)` (Navier) | **Sample indices**: x = column, y = row. | No physical coordinates; the consumer projects. |
+| `ContourBands.Find` | Value → band index, inclusive extremes. | See §4. |
 
-I tre kernel ND hanno anche la forma generica `INumber<T>` (`RectilinearContours<T>`, `RectilinearFieldSampler<T>`, `ContourBands<T>`) con gli **stessi contratti** di questo documento; per `decimal` (senza NaN/Inf) l'overflow della somma dei vertici lancia `OverflowException` invece di saltare la cella. Dettagli in `PIATTAFORME-PRECISIONE.md` §8.
+The three ND kernels also have the generic `INumber<T>` form (`RectilinearContours<T>`, `RectilinearFieldSampler<T>`, `ContourBands<T>`) with the **same contracts** as this document; for `decimal` (without NaN/Inf) overflow of the vertex sum throws `OverflowException` instead of skipping the cell. Details in `PIATTAFORME-PRECISIONE.md` §8.
 
-## 2. Valori non finiti e maschere
+## 2. Non-finite values and masks
 
-| Caso | `RectilinearContours` (ND) | `Charts.MarchingSquares` (Navier) | `ContourArtist` righe | `ContourArtist` riempito |
+| Case | `RectilinearContours` (ND) | `Charts.MarchingSquares` (Navier) | `ContourArtist` lines | `ContourArtist` filled |
 |---|---|---|---|---|
-| NaN/Inf in `z` | La cella è **saltata** se la somma dei quattro vertici non è finita (anche per overflow di valori finiti); i vicini finiti si disegnano | Rifiutato (`ArgumentException`) se non mascherato | Come ND | Il campione NaN non dipinge; `+Inf` tollerato |
-| Z tutta non finita | Vuoto | Rifiutato | **Non disegna nulla** (prima: `InvalidOperationException` accidentale, corretto il 2026-10-29) | Non disegna nulla |
-| Maschera | Non supportata | `bool[,]`: cella saltata se uno dei 4 vertici è mascherato; dimensioni uguali al campo | Non supportata | Non supportata |
-| Coordinate non finite | `ArgumentException` | n/a | `ArgumentException` | `ArgumentException` |
-| Livello NaN | `ArgumentOutOfRangeException` | `ArgumentOutOfRangeException` | `ArgumentOutOfRangeException` | `ArgumentException` (da `ContourBands`) |
-| Livello `+Inf` | `ArgumentOutOfRangeException` | idem | **Saltato in silenzio** (fuori dall'intervallo dei dati) | `ArgumentException` |
+| NaN/Inf in `z` | The cell is **skipped** if the sum of the four vertices is not finite (also for overflow of finite values); finite neighbours are drawn | Rejected (`ArgumentException`) if not masked | As ND | The NaN sample does not paint; `+Inf` tolerated |
+| Z entirely non-finite | Empty | Rejected | **Draws nothing** (before: accidental `InvalidOperationException`, fixed on 2026-10-29) | Draws nothing |
+| Mask | Not supported | `bool[,]`: cell skipped if one of the 4 vertices is masked; dimensions equal to the field | Not supported | Not supported |
+| Non-finite coordinates | `ArgumentException` | n/a | `ArgumentException` | `ArgumentException` |
+| NaN level | `ArgumentOutOfRangeException` | `ArgumentOutOfRangeException` | `ArgumentOutOfRangeException` | `ArgumentException` (from `ContourBands`) |
+| `+Inf` level | `ArgumentOutOfRangeException` | same | **Silently skipped** (outside the data range) | `ArgumentException` |
 
-## 3. Limiti dimensionali e numerici
+## 3. Dimensional and numerical limits
 
-| Percorso | Limite |
+| Path | Limit |
 |---|---|
-| ND (`RectilinearContours`, `RectilinearFieldSampler`) | Nessun tetto su dimensioni o ampiezza dei valori. Il riempito alloca `larghezza × altezza × 4` byte pari alla casella degli assi: il limite pratico è la dimensione della figura. |
-| Navier (`MarchingSquares`) | 1 … 100000 campioni; valori non mascherati finiti e entro ±1e12; livello entro ±1e12. |
-| Overlay heatmap | Al massimo 32 livelli, finiti, entro ±1e12; colore `#rrggbb`; vettori: scala 0 < s ≤ 1e6, stride 1…100000, proiezione entro ±1e7 pixel. |
+| ND (`RectilinearContours`, `RectilinearFieldSampler`) | No cap on dimensions or magnitude of values. The filled path allocates `width × height × 4` bytes equal to the axes box: the practical limit is the size of the figure. |
+| Navier (`MarchingSquares`) | 1 … 100000 samples; unmasked values finite and within ±1e12; level within ±1e12. |
+| Heatmap overlay | At most 32 levels, finite, within ±1e12; colour `#rrggbb`; vectors: scale 0 < s ≤ 1e6, stride 1…100000, projection within ±1e7 pixels. |
 
-Le restrizioni Navier **non** sono state estese al percorso ND: i due consumatori mantengono i propri limiti storici.
+The Navier restrictions have **not** been extended to the ND path: the two consumers keep their own historical limits.
 
-## 4. Ordine di assi e livelli
+## 4. Order of axes and levels
 
-| Elemento | Righe (tracer) | Riempito (sampler + bande) | matplotlib |
+| Element | Lines (tracer) | Filled (sampler + bands) | matplotlib |
 |---|---|---|---|
-| Assi `xs`, `ys` | Qualsiasi ordine, **anche decrescenti o con ripetizioni** (finiti) | **Strettamente crescenti**, altrimenti `ArgumentException` | Accetta assi decrescenti e ripetuti, sia `contour` sia `contourf` (verificato: nessun errore) |
-| Almeno 2×2 | No (1 colonna → vuoto) | Sì | Sì |
-| Livelli | Qualsiasi ordine, ripetuti ammessi, anche vuoti | **Non decrescenti**, finiti, almeno uno; ripetuti ammessi | **Strettamente crescenti** (`ValueError`) |
-| Un solo livello | Ammesso | Ammesso: nessuna banda, non dipinge | n/a |
+| Axes `xs`, `ys` | Any order, **even decreasing or with repetitions** (finite) | **Strictly increasing**, otherwise `ArgumentException` | Accepts decreasing and repeated axes, both `contour` and `contourf` (verified: no error) |
+| At least 2×2 | No (1 column → empty) | Yes | Yes |
+| Levels | Any order, repeats allowed, even empty | **Non-decreasing**, finite, at least one; repeats allowed | **Strictly increasing** (`ValueError`) |
+| A single level | Allowed | Allowed: no band, paints nothing | n/a |
 
-Regole delle bande (`ContourBands.Find`): estremi inclusivi, quindi un valore esattamente su un livello interno appartiene alla banda **superiore**; il valore uguale all'ultimo livello appartiene all'ultima banda; con livelli ripetuti vince **l'ultimo confine corrispondente**. Nel riempito una banda di larghezza zero (livello ripetuto) **consuma un indice colore**: con colori `[Blu, Rosso, Verde]` e livelli `[0,1,1,2]` la banda superiore è verde.
+Band rules (`ContourBands.Find`): inclusive extremes, so a value exactly on an inner level belongs to the **upper** band; the value equal to the last level belongs to the last band; with repeated levels **the last matching boundary** wins. In the filled path a zero-width band (repeated level) **consumes a colour index**: with colours `[Blue, Red, Green]` and levels `[0,1,1,2]` the upper band is green.
 
-Colore di banda: punto medio dei limiti, normalizzato sull'intero intervallo dei livelli (come matplotlib); `hi == lo` → 0. Colore di linea: livello normalizzato sull'intervallo dei livelli.
+Band colour: midpoint of the limits, normalised over the whole range of levels (like matplotlib); `hi == lo` → 0. Line colour: level normalised over the range of levels.
 
-## 5. Arrotondamenti e aritmetica
+## 5. Rounding and arithmetic
 
-Conservata alla lettera rispetto ai codici d'origine, con test di non regressione esatta:
+Preserved to the letter with respect to the original code, with exact non-regression tests:
 
-- Intersezione: `t = (level - v1) / (v2 - v1)`, punto `p1 + t·(p2 - p1)`; lato attraversato se `(v1 < level) != (v2 < level)`.
-- Sella: i punti d'intersezione si accoppiano in ordine fisso (0–1, 2–3). Ordine dei lati: ND avanti (`d→c`, `a→d`), Navier inverso (`c→d`, `d→a`).
-- Vertici esattamente a livello: i segmenti degeneri (lunghezza zero) sono **preservati** da `RectilinearContours` e dal modo di compatibilità Navier; `ContourArtist` esclude i livelli agli estremi osservati dei dati (`lv <= zmin` o `lv >= zmax`).
-- Sampler: quattro termini `z00(1-tx)(1-ty) + z01·tx(1-ty) + z10(1-tx)·ty + z11·tx·ty`, **senza riassociazione**; l'overflow si propaga come in origine.
-- Punto medio di banda: `(a + b) / 2`, poi `(mid - lo) / (hi - lo)`; overflow/NaN passano al chiamante.
-- Livelli automatici (`ContourArtist.AutoLevels(zmin, zmax, n)`): identici a `MaxNLocator(n + 1, min_n_ticks=1)` di matplotlib 3.11.2 su 7 casi verificati.
+- Intersection: `t = (level - v1) / (v2 - v1)`, point `p1 + t·(p2 - p1)`; side crossed if `(v1 < level) != (v2 < level)`.
+- Saddle: the intersection points are paired in fixed order (0–1, 2–3). Order of the sides: ND forward (`d→c`, `a→d`), Navier reverse (`c→d`, `d→a`).
+- Vertices exactly at the level: degenerate segments (zero length) are **preserved** by `RectilinearContours` and by the Navier compatibility mode; `ContourArtist` excludes the levels at the observed extremes of the data (`lv <= zmin` or `lv >= zmax`).
+- Sampler: four terms `z00(1-tx)(1-ty) + z01·tx(1-ty) + z10(1-tx)·ty + z11·tx·ty`, **without reassociation**; overflow propagates as in the original.
+- Band midpoint: `(a + b) / 2`, then `(mid - lo) / (hi - lo)`; overflow/NaN pass to the caller.
+- Automatic levels (`ContourArtist.AutoLevels(zmin, zmax, n)`): identical to matplotlib 3.11.2's `MaxNLocator(n + 1, min_n_ticks=1)` on 7 verified cases.
 
-## 6. Default di `ContourArtist`
+## 6. `ContourArtist` defaults
 
-Colormap `viridis`; `LineWidth` 1.5; stile `-`, **tratteggiato `--` per i livelli negativi solo con un colore unico** (`Colors` di lunghezza 1), come matplotlib; `Colors` più corto dei livelli: ciclico; `Alpha` scala la trasparenza del riempimento (verificato su pixel composito su fondo bianco).
+Colormap `viridis`; `LineWidth` 1.5; style `-`, **dashed `--` for negative levels only with a single colour** (`Colors` of length 1), like matplotlib; `Colors` shorter than the levels: cyclic; `Alpha` scales the transparency of the fill (verified on the composite pixel over a white background).
 
-## 7. Differenze accettate rispetto a matplotlib
+## 7. Accepted differences from matplotlib
 
-Verificate con matplotlib 3.11.2 (esecuzione reale, solo presenza/assenza di eccezione; non ho confrontato cosa viene disegnato):
+Verified with matplotlib 3.11.2 (real execution, only presence/absence of an exception; I did not compare what is drawn):
 
-1. **Livelli non crescenti:** matplotlib li rifiuta (`ValueError`) in righe e riempito; NDSharp li accetta nelle righe e rifiuta solo i decrescenti nel riempito.
-2. **Assi decrescenti o ripetuti:** matplotlib li accetta ovunque; NDSharp li accetta nelle righe ma il **riempito li rifiuta**. Qui NDSharp è *più restrittivo*.
-3. **Livelli NaN e `+Inf`:** matplotlib non solleva eccezioni; NDSharp solleva per NaN (righe) e per ogni livello non finito (riempito), e ignora `+Inf` nelle righe.
-4. **Z tutta non finita:** matplotlib non solleva; NDSharp non disegna (corretto un crash accidentale nelle righe).
+1. **Non-increasing levels:** matplotlib rejects them (`ValueError`) in lines and filled; NDSharp accepts them in lines and rejects only decreasing ones in filled.
+2. **Decreasing or repeated axes:** matplotlib accepts them everywhere; NDSharp accepts them in lines but **filled rejects them**. Here NDSharp is *more restrictive*.
+3. **NaN and `+Inf` levels:** matplotlib raises no exception; NDSharp raises for NaN (lines) and for every non-finite level (filled), and ignores `+Inf` in lines.
+4. **Z entirely non-finite:** matplotlib does not raise; NDSharp draws nothing (an accidental crash in lines was fixed).
 
-**DECISO 2026-10-29: opzione (c)** — lasciare tutto com'è e dichiarare le differenze. Le opzioni valutate erano: (nessuna modifica finché non confermi): (a) rifiutare i livelli non crescenti anche nelle righe e nel riempito, come matplotlib; (b) accettare assi decrescenti nel riempito (richiede di ordinare/riflettere il campione, modifica del kernel con fixture congelata); (c) lasciare tutto com'è e dichiarare le differenze. Allineare a matplotlib sui livelli è una **restrizione nuova** per chi oggi li passa alle righe.
+**DECIDED 2026-10-29: option (c)** — leave everything as it is and declare the differences. The options evaluated were (no change until you confirm): (a) reject non-increasing levels also in lines and filled, like matplotlib; (b) accept decreasing axes in filled (requires sorting/reflecting the sample, a kernel change with a frozen fixture); (c) leave everything as it is and declare the differences. Aligning with matplotlib on levels is a **new restriction** for those who pass them to lines today.
 
-## 8. Copertura
+## 8. Coverage
 
-| Contratto | Test |
+| Contract | Test |
 |---|---|
-| Tracer, sella, vertici, overflow, assi decrescenti, singoletti, input malformati | `PlotSharp.Tests/RectilinearContourTests.cs` (6) |
-| Sampler, fixture congelata 81 query, estrapolazione, snapshot, rifiuti | `RectilinearFieldSamplerTests.cs` |
-| Bande, estremi, ripetuti, punto medio, overflow, snapshot, rifiuti | `ContourBandsTests.cs` |
-| Livelli automatici contro matplotlib, alpha, livelli ripetuti, non finiti nel riempito | `NDSharp.Plot.Tests/ContourBaselineTests.cs` |
-| Differenze righe/riempito di §2 e §4, «non disegna nulla» confrontato byte a byte col grafico vuoto | `NDSharp.Plot.Tests/ContourContractTests.cs` |
+| Tracer, saddle, vertices, overflow, decreasing axes, singletons, malformed inputs | `PlotSharp.Tests/RectilinearContourTests.cs` (6) |
+| Sampler, frozen fixture of 81 queries, extrapolation, snapshot, rejections | `RectilinearFieldSamplerTests.cs` |
+| Bands, extremes, repeats, midpoint, overflow, snapshot, rejections | `ContourBandsTests.cs` |
+| Automatic levels against matplotlib, alpha, repeated levels, non-finite in filled | `NDSharp.Plot.Tests/ContourBaselineTests.cs` |
+| Lines/filled differences of §2 and §4, "draws nothing" compared byte by byte with the empty chart | `NDSharp.Plot.Tests/ContourContractTests.cs` |
 
-## 9. Non coperto
+## 9. Not covered
 
-- Limiti numerici del percorso ND non sono testati oltre l'overflow della somma dei vertici.
-- Non ho misurato il tempo o la memoria del riempito per figure molto grandi.
-- Il confronto con matplotlib è limitato ai livelli automatici; geometria dei segmenti e colori delle bande non sono confrontati con l'oracolo in questa tranche.
-- Quiver e 3D non hanno contratti scritti (R14).
+- Numerical limits of the ND path are not tested beyond the overflow of the vertex sum.
+- I did not measure the time or memory of the filled path for very large figures.
+- The comparison with matplotlib is limited to the automatic levels; segment geometry and band colours are not compared with the oracle in this tranche.
+- Quiver and 3D have no written contracts (R14).

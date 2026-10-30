@@ -1,97 +1,97 @@
-# Framework, piattaforme e precisione (R06)
+# Framework, platforms and precision (R06)
 
-Stato al 2026-10-29. Dati rilevati da csproj, nuspec, `project.assets.json` e da un consumer isolato eseguito; la **piattaforma supportata è una delibera dell'autore** (§5), qui è solo proposta. Nessun retargeting è stato eseguito.
+State as of 2026-10-29. Data taken from csproj, nuspec, `project.assets.json` and from an isolated consumer that was run; the **supported platform is a decision of the author** (§5), here it is only a proposal. No retargeting was performed.
 
-## 1. Target framework effettivi
+## 1. Effective target frameworks
 
-| Ambito | TFM | Note |
+| Scope | TFM | Notes |
 |---|---|---|
-| Tutti i progetti di PlotSharp, NDSharp, MatSharp, MathemaSharp, PySharp, JupyterSharp, NavierStokes, DecimalInDotNet11 | `net11.0` | SDK `11.0.100-rc.3.26522.148` (`global.json` di MathemaSharp, `latestFeature`, prerelease consentita). Sono **RC3**: nessuna garanzia di supporto a lungo termine. |
-| `Ecosystem.Validation`, `Ecosystem.Validation.Tests` | `net10.0` | Eccezione già dichiarata (R01); gira su runtime 10.0.14 o in roll-forward. Non è un pacchetto distribuito. |
-| Snapshot `src/imports/*` | n/d | Copie storiche, non compilate come prodotto. |
+| All projects of PlotSharp, NDSharp, MatSharp, MathemaSharp, PySharp, JupyterSharp, NavierStokes, DecimalInDotNet11 | `net11.0` | SDK `11.0.100-rc.3.26522.148` (MathemaSharp's `global.json`, `latestFeature`, prerelease allowed). They are **RC3**: no guarantee of long-term support. |
+| `Ecosystem.Validation`, `Ecosystem.Validation.Tests` | `net10.0` | Exception already declared (R01); runs on runtime 10.0.14 or with roll-forward. It is not a distributed package. |
+| `src/imports/*` snapshots | n/a | Historical copies, not compiled as a product. |
 
-Runtime installati sulla macchina di verifica: 5.0, 6.0, 9.0, 10.0.14, 11.0.0-rc.3 (SDK 6, 10 RC1, 11 RC3).
+Runtimes installed on the verification machine: 5.0, 6.0, 9.0, 10.0.14, 11.0.0-rc.3 (SDK 6, 10 RC1, 11 RC3).
 
-## 2. Pacchetti: cosa dichiarano e cosa contengono
+## 2. Packages: what they declare and what they contain
 
-| Pacchetto (feed locale `D:\Dev\NuGetLocalFeed`) | TFM nel pacchetto | Dipendenze rilevate | Note |
+| Package (local feed `D:\Dev\NuGetLocalFeed`) | TFM in the package | Dependencies found | Notes |
 |---|---|---|---|
-| `NDSharp.Plot 2.6.3-net11-preview.2` (27/10) | `net11.0` | NDSharp 2.8.1-net11-preview.1, SkiaSharp 3.119.0, Skia nativi Linux e macOS | **Non dipende da PlotSharp**: contiene il codice contour precedente alle estrazioni. È la versione che `MatSharpLib.Plot` e `PySharpLib.Matplotlib` referenziano. |
-| `PlotSharp 0.1.1-net11-preview.1` (27/10) | `net11.0`, nessuna dipendenza | `authors` = "PlotSharp", **nessuna licenza** | Blocco L1 di R04 |
-| Sorgenti correnti, impacchettati in un feed temporaneo come `9.9.9-r06` | `net11.0` | NDSharp.Plot → NDSharp + **PlotSharp** + SkiaSharp 3.119.0 + Skia nativi Linux/macOS | Prova per N4; il feed locale **non è stato toccato** |
+| `NDSharp.Plot 2.6.3-net11-preview.2` (27/10) | `net11.0` | NDSharp 2.8.1-net11-preview.1, SkiaSharp 3.119.0, Skia natives Linux and macOS | **Does not depend on PlotSharp**: it contains the contour code predating the extractions. It is the version that `MatSharpLib.Plot` and `PySharpLib.Matplotlib` reference. |
+| `PlotSharp 0.1.1-net11-preview.1` (27/10) | `net11.0`, no dependencies | `authors` = "PlotSharp", **no licence** | Blocker L1 of R04 |
+| Current sources, packed into a temporary feed as `9.9.9-r06` | `net11.0` | NDSharp.Plot → NDSharp + **PlotSharp** + SkiaSharp 3.119.0 + Skia natives Linux/macOS | Test for N4; the local feed was **not touched** |
 
-Conseguenza: finché non si ripubblica NDSharp.Plot con la dipendenza da PlotSharp, **i consumatori a valle non usano il kernel condiviso** (R12/N4 aperti).
+Consequence: until NDSharp.Plot is republished with the dependency on PlotSharp, **the downstream consumers do not use the shared kernel** (R12/N4 open).
 
-## 3. Verifica con consumer isolato
+## 3. Verification with an isolated consumer
 
-Progetto vuoto in cartella temporanea, feed temporaneo + nuget.org, cache pacchetti separata, nessun artefatto locale preesistente.
+Empty project in a temporary folder, temporary feed + nuget.org, separate package cache, no pre-existing local artifact.
 
-| Prova | Esito |
+| Test | Result |
 |---|---|
-| Consumer `net11.0`, `dotnet run` su Windows x64, runtime 11.0.0, riferimento al solo `NDSharp.Plot` | **OK**: restore pulito, `PlotSharp 9.9.9` risolto transitivamente, contour riempito non uniforme renderizzato, pixel atteso verificato (rosso nella banda alta) |
-| Consumer `net10.0` | **Rifiutato in restore**: `NU1202`, il pacchetto supporta solo `net11.0` |
-| Restore per `linux-x64`, `linux-arm64`, `linux-musl-x64`, `osx-x64`, `osx-arm64`, `win-x86`, `win-x64`, `win-arm64` | Il grafo dei pacchetti contiene `libSkiaSharp` per win-x86/x64/arm64, osx, linux-{x64, arm, arm64, x86, loongarch64, riscv64} e linux-musl-{x64, arm, arm64, loongarch64, riscv64}. **Solo risoluzione dei file: non eseguito.** |
-| `browser-wasm`, `android-arm64` | Nessun nativo Skia nel grafo di NDSharp.Plot |
+| `net11.0` consumer, `dotnet run` on Windows x64, runtime 11.0.0, reference to `NDSharp.Plot` only | **OK**: clean restore, `PlotSharp 9.9.9` resolved transitively, non-uniform filled contour rendered, expected pixel verified (red in the upper band) |
+| `net10.0` consumer | **Rejected at restore**: `NU1202`, the package supports only `net11.0` |
+| Restore for `linux-x64`, `linux-arm64`, `linux-musl-x64`, `osx-x64`, `osx-arm64`, `win-x86`, `win-x64`, `win-arm64` | The package graph contains `libSkiaSharp` for win-x86/x64/arm64, osx, linux-{x64, arm, arm64, x86, loongarch64, riscv64} and linux-musl-{x64, arm, arm64, loongarch64, riscv64}. **File resolution only: not run.** |
+| `browser-wasm`, `android-arm64` | No Skia native in NDSharp.Plot's graph |
 
-Eseguito davvero: **solo win-x64**. Linux e macOS non sono stati provati (nessun host disponibile).
+Really run: **win-x64 only**. Linux and macOS were not tried (no host available).
 
-## 4. Piattaforme per componente
+## 4. Platforms per component
 
-| Componente | Dipendenze native | Piattaforme (da dati) |
+| Component | Native dependencies | Platforms (from data) |
 |---|---|---|
-| PlotSharp | Nessuna (solo BCL, SVG/HTML, encoder PNG RGB8) | Qualunque host .NET 11 |
-| NDSharp.Plot | SkiaSharp 3.119.0 + font DejaVu incorporati | Windows, macOS, Linux glibc/musl come da §3; non per browser/mobile |
-| NDSharp.Image | OpenCvSharp4.runtime.win | **Solo Windows** per il runtime nativo incluso |
-| PySharp.Torch | TorchSharp-cpu | Fuori dal perimetro grafico |
+| PlotSharp | None (BCL only, SVG/HTML, RGB8 PNG encoder) | Any .NET 11 host |
+| NDSharp.Plot | SkiaSharp 3.119.0 + embedded DejaVu fonts | Windows, macOS, Linux glibc/musl as per §3; not browser/mobile |
+| NDSharp.Image | OpenCvSharp4.runtime.win | **Windows only** for the included native runtime |
+| PySharp.Torch | TorchSharp-cpu | Outside the graphics perimeter |
 
-## 5. Politica di conversione numerica (precisione)
+## 5. Numeric conversion policy (precision)
 
-Il grafico lavora in `double`; i dati memorizzati non vengono modificati. Test in `NDSharp.Plot.Tests/PrecisionPolicyTests.cs`.
+The chart works in `double`; the stored data is not modified. Tests in `NDSharp.Plot.Tests/PrecisionPolicyTests.cs`.
 
-| Passaggio | Politica | Verificato |
+| Step | Policy | Verified |
 |---|---|---|
-| NDArray → `double` per la visualizzazione (`ToArray<double>`) | Esatta per `Float32` e per interi fino a ±(2^53 − 1); **arrotondata** oltre (es. 2^53 + 1 → 2^53, pareggio al pari) | Sì, 3 test |
-| `Float32` → `double` | Estensione esatta; non recupera il decimale (0,1f ≠ 0,1) | Sì |
-| Valori memorizzati | Immutati dalla conversione | Sì (il `long` originale resta 2^53 + 1) |
-| Complessi | `PySharp.Matplotlib` usa la parte reale degli scalari; `MatSharp.Plot` usa `Mat.Re`. La parte immaginaria non è tracciata | Dal codice, non testato |
-| Decimal | Nessun `DType` decimale in NDSharp: i `decimal` di MathemaSharp non entrano nel plot senza una conversione esplicita del chiamante | Dal codice |
-| Pixel raster | Coordinate Skia in `float` (84 cast in NDSharp.Plot): la risoluzione sub-pixel non è double | Dal codice |
-| SVG | Coordinate con `0.##` (2 decimali di pixel); etichette con `Charts.Num` (es. 1234567,891 → `1.2e6`), scientifica fuori da [1e-3, 1e5) | Sì, 2 casi |
+| NDArray → `double` for display (`ToArray<double>`) | Exact for `Float32` and for integers up to ±(2^53 − 1); **rounded** beyond (e.g. 2^53 + 1 → 2^53, tie to even) | Yes, 3 tests |
+| `Float32` → `double` | Exact extension; it does not recover the decimal (0.1f ≠ 0.1) | Yes |
+| Stored values | Unchanged by the conversion | Yes (the original `long` stays 2^53 + 1) |
+| Complex | `PySharp.Matplotlib` uses the real part of scalars; `MatSharp.Plot` uses `Mat.Re`. The imaginary part is not plotted | From the code, not tested |
+| Decimal | No decimal `DType` in NDSharp: MathemaSharp's `decimal` values do not enter the plot without an explicit conversion by the caller | From the code |
+| Raster pixels | Skia coordinates in `float` (84 casts in NDSharp.Plot): sub-pixel resolution is not double | From the code |
+| SVG | Coordinates with `0.##` (2 decimals of a pixel); labels with `Charts.Num` (e.g. 1234567.891 → `1.2e6`), scientific outside [1e-3, 1e5) | Yes, 2 cases |
 
-Regola: **la precisione di calcolo non è quella del disegno.** Il disegno non è una fonte per recuperare i dati; chi deve conservare interi > 2^53 o decimali esatti deve tenerli fuori dal percorso di plot o convertirli esplicitamente.
+Rule: **the precision of the calculation is not that of the drawing.** The drawing is not a source from which to recover the data; whoever must keep integers > 2^53 or exact decimals has to keep them out of the plot path or convert them explicitly.
 
-## 6. Decisioni dell'autore (2026-10-29)
+## 6. Author's decisions (2026-10-29)
 
-- **D-F1 — deciso:** si supporta **solo `net11.0`**. Nessun secondo target (`net10.0`); l'eccezione `Ecosystem.Validation(+Tests)` resta tale.
-- **D-F2 — deciso:** provare **tutte** le piattaforme, **in futuro** (R15). Oggi è dichiarata come provata solo win-x64; Linux/macOS/arm64/musl restano non verificate finché non si esegue su quegli host.
-- **D-F3 — rinviato:** se ripubblicare NDSharp.Plot con PlotSharp come dipendenza (N4) si decide dopo. Pubblicazione e installazione globale restano su richiesta esplicita.
-- **Indicazione aggiuntiva:** usare **Generic Math dove possibile** (vedi §8).
+- **D-F1 — decided:** only **`net11.0`** is supported. No second target (`net10.0`); the `Ecosystem.Validation(+Tests)` exception remains an exception.
+- **D-F2 — decided:** try **all** platforms, **in the future** (R15). Today only win-x64 is declared as tried; Linux/macOS/arm64/musl remain unverified until it is run on those hosts.
+- **D-F3 — postponed:** whether to republish NDSharp.Plot with PlotSharp as a dependency (N4) will be decided later. Publication and global installation remain on explicit request.
+- **Additional indication:** use **Generic Math where possible** (see §8).
 
-## 8. Generic Math (indicazione dell'autore: «dove possibile»)
+## 8. Generic Math (author's indication: "where possible")
 
-Fatto il 2026-10-29, solo con `System.Numerics` (BCL: PlotSharp resta senza dipendenze). Vincolo `T : INumber<T>`.
+Done on 2026-10-29, only with `System.Numerics` (BCL: PlotSharp stays without dependencies). Constraint `T : INumber<T>`.
 
-| Kernel | Forma generica | API `double` esistente |
+| Kernel | Generic form | Existing `double` API |
 |---|---|---|
-| Tracciatore di contour | `RectilinearContours<T>.Trace(T[], T[], T[], T)` → `Charts.Segment<T>` | Invariata, delega all'istanza `double` |
-| Campionatore bilineare | `RectilinearFieldSampler<T>` | Invariata, delega |
-| Bande di livelli | `ContourBands<T>` | Invariata, delega |
-| Cella/interpolazione interna | `ContourKernel.Trace<T>` (condiviso anche da `Charts.MarchingSquares` Navier) | `double` |
+| Contour tracer | `RectilinearContours<T>.Trace(T[], T[], T[], T)` → `Charts.Segment<T>` | Unchanged, delegates to the `double` instance |
+| Bilinear sampler | `RectilinearFieldSampler<T>` | Unchanged, delegates |
+| Level bands | `ContourBands<T>` | Unchanged, delegates |
+| Internal cell/interpolation | `ContourKernel.Trace<T>` (also shared by Navier's `Charts.MarchingSquares`) | `double` |
 
-**Garanzia di compatibilità:** per `double` la sequenza di operazioni è identica. Lo dimostrano i test congelati esistenti (fixture a 81 query, aritmetica pre-migrazione) rimasti invariati e passanti: PlotSharp 234/234 (227 + 7 nuovi), NDSharp.Plot.Tests 46/46, NavierStokes `selftest` superato (Strouhal 0,188).
+**Compatibility guarantee:** for `double` the sequence of operations is identical. The existing frozen tests (81-query fixture, pre-migration arithmetic) that remained unchanged and passing show it: PlotSharp 234/234 (227 + 7 new), NDSharp.Plot.Tests 46/46, NavierStokes `selftest` passed (Strouhal 0.188).
 
-**Cosa guadagna il chiamante** (`GenericMathKernelTests`): con `decimal` l'intersezione di 0,1 e 0,3 a livello 0,2 cade esattamente su 0,15, mentre con `double` è 0,15 più un ulp; `float` e `Half` tracciano la stessa geometria entro la propria precisione.
+**What the caller gains** (`GenericMathKernelTests`): with `decimal` the intersection of 0.1 and 0.3 at level 0.2 falls exactly on 0.15, while with `double` it is 0.15 plus one ulp; `float` and `Half` trace the same geometry within their own precision.
 
-**Differenze di comportamento per i tipi non IEEE:** `decimal` non ha infiniti né NaN. Il test «somma dei vertici non finita» che per `double` salta la cella, per `decimal` fa emergere `OverflowException`. È documentato e testato.
+**Behaviour differences for non-IEEE types:** `decimal` has no infinities or NaN. The "non-finite vertex sum" test that skips the cell for `double` raises `OverflowException` for `decimal`. It is documented and tested.
 
-**Dove NON si applica (motivo):**
-- *Disegno e colore* (`Heatmap`, `ColorScale`, `ColorPalette`, SVG, Skia): il risultato è comunque pixel o testo; restano `double`/`float`.
-- *`ContourArtist` e consumatori NDSharp*: usano `double[]` per contratto con PySharp.Matplotlib e MatSharp.Plot; non sono stati generalizzati. Un chiamante che vuole la precisione di `decimal` può oggi usare i kernel generici direttamente, ma non l'artista.
-- *Overlay Navier* (`double[,]`, limiti ±1e12 e 100000 campioni): contratto storico, invariato.
+**Where it does NOT apply (reason):**
+- *Drawing and colour* (`Heatmap`, `ColorScale`, `ColorPalette`, SVG, Skia): the result is pixels or text anyway; they stay `double`/`float`.
+- *`ContourArtist` and NDSharp consumers*: they use `double[]` by contract with PySharp.Matplotlib and MatSharp.Plot; they were not generalised. A caller who wants `decimal` precision can today use the generic kernels directly, but not the artist.
+- *Navier overlay* (`double[,]`, limits ±1e12 and 100000 samples): historical contract, unchanged.
 
-## 7. Limiti
+## 7. Limits
 
-- Un solo host eseguito (Windows x64, runtime 11.0.0 RC3).
-- La risoluzione per RID mostra i file presenti nel pacchetto, non che il caricamento funzioni.
-- Non ho misurato l'effetto della conversione `float` sul raster.
-- Il tag `-net11-preview` dei pacchetti non è stato valutato rispetto alle regole di versionamento (R16).
+- Only one host run (Windows x64, runtime 11.0.0 RC3).
+- Resolution by RID shows the files present in the package, not that loading works.
+- I did not measure the effect of the `float` conversion on the raster.
+- The `-net11-preview` tag of the packages was not evaluated against the versioning rules (R16).

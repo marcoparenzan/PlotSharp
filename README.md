@@ -13,7 +13,7 @@
 | [README](README.md) | [USAGE](USAGE.md) (install first) | [ARCHITECTURE](ARCHITECTURE.md) | [ROADMAP](ROADMAP.md) | [OPENPOINTS](OPENPOINTS.md) |
 | --- | --- | --- | --- | --- |
 
-Libreria sperimentale di Charts per .NET 11: line/scatter, tratteggi, pannelli, stems, barre verticali e heatmap SVG a celle con colorbar, maschere, tick fisici e overlay contour/quiver opzionali. Il renderer di base è estratto da NavierStokes; la facade indicizzata è ispirata a MathemaSharp, senza creare motori paralleli per ogni host. Nessuna dipendenza da kernel, NDArray, Blazor o librerie native.
+Experimental Charts library for .NET 11: line/scatter, dashes, panels, stems, vertical bars and cell-based SVG heatmaps with colorbar, masks, physical ticks and optional contour/quiver overlays. The base renderer is extracted from NavierStokes; the indexed facade is inspired by MathemaSharp, without creating parallel engines for each host. No dependency on kernels, NDArray, Blazor or native libraries.
 
 ## Build
 
@@ -22,23 +22,23 @@ dotnet build src/PlotSharp.slnx
 dotnet test src/PlotSharp.slnx
 ```
 
-La soluzione include libreria, test, galleria console e tool di inventario degli import (`src/tools/PlotSharp.Inventory`). Il catalogo rigenerabile è in `ops/inventory/`; la revisione di compatibilità rimane aperta. Per generare gli esempi:
+The solution includes the library, tests, a console gallery and the import inventory tool (`src/tools/PlotSharp.Inventory`). The regenerable catalogue is in `ops/inventory/`; the compatibility review remains open. To generate the examples:
 
 ```sh
 dotnet run --project src/PlotSharp.Gallery/PlotSharp.Gallery/PlotSharp.Gallery.csproj -- artifacts/gallery
 ```
 
-Aprire `artifacts/gallery/index.html` nel browser. La galleria è stata eseguita e i singoli SVG/pannelli validati come XML; non è stato effettuato un controllo visivo nel browser. `src/imports/` contiene snapshot di riferimento, **non progetti attivi** e non una copia completa dei repository originali. Gli snapshot e `import-manifest.csv` non sono stati modificati.
+Open `artifacts/gallery/index.html` in the browser. The gallery was run and the individual SVGs/panels validated as XML; no visual check was made in the browser. `src/imports/` contains reference snapshots, **not active projects** and not a complete copy of the original repositories. The snapshots and `import-manifest.csv` have not been modified; the snapshots are archived as they were and are not translated (some of their documents are in Italian).
 
-Per adottare localmente: aggiungere un ProjectReference a `src/PlotSharp/PlotSharp/PlotSharp.csproj`. Non è stata pubblicata una versione NuGet né aggiornato alcun consumatore.
+To adopt locally: add a ProjectReference to `src/PlotSharp/PlotSharp/PlotSharp.csproj`. No NuGet version has been published and no consumer updated.
 
-- [Usage e Reference](USAGE.md)
-- [Architettura, inventario e decisioni](ARCHITECTURE.md)
-- [Roadmap del prodotto, stato di completamento e registro dei consumatori](ROADMAP.md)
+- [Usage and Reference](USAGE.md)
+- [Architecture, inventory and decisions](ARCHITECTURE.md)
+- [Product roadmap, completion status and consumer register](ROADMAP.md)
 
-**Stato del consolidamento:** nucleo SVG funzionante, patrimonio Charts ancora parzialmente consolidato; **0/4 famiglie esterne migrate**. La roadmap distingue milestone del prodotto, funzionalità implementate, dipendenze attive e adozioni previste, con criteri di accettazione verificabili.
+**Consolidation status:** working SVG core, Charts heritage still partially consolidated; **0/4 external families migrated**. The roadmap distinguishes product milestones, implemented features, active dependencies and planned adoptions, with verifiable acceptance criteria.
 
-La libreria è utilizzabile per valutazioni interne. Dal 2026-10-29 il codice è sotto licenza MIT (vedi la sezione License in fondo); resta da decidere se pubblicare. La denominazione universale indica l'obiettivo di riuso tra host, non la copertura già completa dei tipi di grafico.
+The library is usable for internal evaluation. Since 2026-10-29 the code is under the MIT licence (see the License section at the bottom); whether to publish remains to be decided. The universal naming indicates the goal of reuse across hosts, not the already complete coverage of chart types.
 
 ## License
 

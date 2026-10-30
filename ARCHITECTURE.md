@@ -1,102 +1,102 @@
-# Architettura e inventario
+# Architecture and inventory
 
 ## Layout
 
-- `src/PlotSharp.slnx`: soluzione attiva .NET 11.
-- `src/PlotSharp/PlotSharp/`: libreria, API Charts e renderer SVG.
-- `src/PlotSharp.Tests/PlotSharp.Tests/`: test xUnit.
-- `src/imports/<origine>/`: archivio immutato, escluso dalla soluzione.
-- `import-manifest.csv`: provenienza e hash degli import originali; non descrive gli hash dei file estratti/modificati.
-- `notebooks/`: spazio riservato alla galleria futura.
-- `ops/`: spazio operativo; nessuna pipeline attivata.
+- `src/PlotSharp.slnx`: active .NET 11 solution.
+- `src/PlotSharp/PlotSharp/`: library, Charts API and SVG renderer.
+- `src/PlotSharp.Tests/PlotSharp.Tests/`: xUnit tests.
+- `src/imports/<origin>/`: unchanged archive, excluded from the solution.
+- `import-manifest.csv`: provenance and hashes of the original imports; it does not describe the hashes of extracted/modified files.
+- `notebooks/`: space reserved for the future gallery.
+- `ops/`: operations space; no pipeline activated.
 
-## Inventario rigenerabile (P01)
+## Regenerable inventory (P01)
 
-Tool attivo `src/tools/PlotSharp.Inventory`, senza dipendenza da PlotSharp. Tests lo riferisce per testare CSV, dichiarazioni, decodifica notebook e mapping. Output in `ops/inventory/`: files.csv (provenienza/classificazione/hash), public-declarations.csv (dichiarazioni e destinazione proposta), notebook-calls.csv (cella/riga/call), references.csv (ProjectReference/PackageReference e presenza csproj).
+Active tool `src/tools/PlotSharp.Inventory`, with no dependency on PlotSharp. Tests references it to test CSVs, declarations, notebook decoding and mapping. Output in `ops/inventory/`: files.csv (provenance/classification/hash), public-declarations.csv (declarations and proposed destination), notebook-calls.csv (cell/line/call), references.csv (ProjectReference/PackageReference and csproj presence).
 
-Ultima esecuzione: 148 file, 478 righe con dichiarazioni public, 68 occorrenze chart/display nei notebook, 86 riferimenti di progetto/package, 0 ProjectReference mancanti nel perimetro corrente. **Zero csproj mancanti non prova sorgenti complete, restore o build dei consumatori.** Trovati import `.ralfai/undo`: restano nel catalogo file/hash come provenienza, ma sono esclusi da API/usi/riferimenti correnti. Nessuno snapshot modificato.
+Last run: 148 files, 478 lines with public declarations, 68 chart/display occurrences in the notebooks, 86 project/package references, 0 missing ProjectReference in the current perimeter. **Zero missing csproj does not prove complete sources, restore or build of the consumers.** `.ralfai/undo` imports were found: they stay in the file/hash catalogue as provenance, but are excluded from the current API/uses/references. No snapshot was modified.
 
-Limiti: scanner lessicale, non Roslyn/semantic API; non raccoglie dichiarazioni non-public, non ricostruisce firme multilinea né scope completo e può includere righe pubbliche in commenti multilinea. Notebook analizzati via JSON (escape Unicode decodificati), solo source delle code cells, non output/markdown; regex Chart/Charts/IndexedCharts/plt non copre alias o chiamate dinamiche e può includere stringhe/commenti. CSV generati sono baseline di revisione, non decisioni di compatibilità approvate. Non modificarli manualmente: modificare le regole del tool e rigenerare; decisioni curate in questa matrice/roadmap.
+Limits: lexical scanner, not Roslyn/semantic API; it does not collect non-public declarations, does not reconstruct multi-line signatures nor the full scope and may include public lines in multi-line comments. Notebooks analysed via JSON (Unicode escapes decoded), only the source of code cells, not output/markdown; the Chart/Charts/IndexedCharts/plt regex does not cover aliases or dynamic calls and may include strings/comments. The generated CSVs are review baselines, not approved compatibility decisions. Do not edit them manually: change the tool's rules and regenerate; curated decisions are in this matrix/roadmap.
 
-### Matrice di destinazione per materiale NDSharp.Plot
+### Destination matrix for NDSharp.Plot material
 
-Tutte le righe sono **proposte da verificare**, non estrazioni completate. Le dichiarazioni puntuali e numeri di riga sono nel CSV.
+All rows are **proposals to verify**, not completed extractions. The individual declarations and line numbers are in the CSV.
 
-| Fonte | Superficie raccolta | Destinazione proposta / stato |
+| Source | Surface collected | Proposed destination / status |
 |---|---|---|
-| Artists.cs | Artist/DrawContext, Line2D, Scatter, Patch/Rect/Ellipse/Polygon, TextArtist, ImageArtist, ArrowProps/CoordSpace | P03 modello + P05 backend; nessuna equivalenza completa con Series attuale |
-| Axes.cs | GridCell, Legend, Axes, limiti/inversioni, tick lineari/log, conversione coordinate, Colorbar | P05 facade Figure/Axes; tick log/inversioni/legend avanzate mancanti |
-| Figure.cs | Figure/SubplotParams, Renderer, Layout/tight_layout, RenderPng | P05 modello figure + renderer raster; non consolidato |
-| FigureExtensions.cs | Estensioni Figure | P05 compatibilità, da portare con il modello |
-| Colormap.cs / Colormaps.g.cs | Colormap/Colors e palette generate | P03 scala/colormap + P05 compatibilità; palette completa non estratta |
-| Contour.cs | ContourArtist/IMappable e algoritmo | P05 compatibilità contour/fill; overlay attuale non sostituisce questa API |
-| Quiver.cs | Artist Quiver, bounds e geometria shaft/testa | Geometria adattata in FieldOverlays, API Artist/bounds/legend non consolidata |
-| Plot3D.cs | Artist3D, Line3D/Scatter3D/Poly3D/Text3D, proiezione | P05 modello/proiezione/backend; non escluso né implementato |
-| Text.cs | Fonts, TextMetrics, MathText | P05 tipografia/backend; font e licenze da preservare |
-| Ticks.cs | Locator/formatter, offset, log | P03/P05 assi; NiceTicks attuale non equivalente |
-| Fonts/*.ttf e LICENSE_DEJAVU | Asset terzi | P02/P05 notice e risorse backend; non incorporati |
-| HighLevelTests.cs | Test originali API plotting | P05 test compatibilità; archiviati, non eseguiti |
-| tools/oracle/gen_colormaps.py | Generazione palette | Tool di origine da conservare come provenance/generazione; non runtime core |
+| Artists.cs | Artist/DrawContext, Line2D, Scatter, Patch/Rect/Ellipse/Polygon, TextArtist, ImageArtist, ArrowProps/CoordSpace | P03 model + P05 backend; no complete equivalence with the current Series |
+| Axes.cs | GridCell, Legend, Axes, limits/inversions, linear/log ticks, coordinate conversion, Colorbar | P05 Figure/Axes facade; log ticks/inversions/advanced legends missing |
+| Figure.cs | Figure/SubplotParams, Renderer, Layout/tight_layout, RenderPng | P05 figure model + raster renderer; not consolidated |
+| FigureExtensions.cs | Figure extensions | P05 compatibility, to be brought along with the model |
+| Colormap.cs / Colormaps.g.cs | Colormap/Colors and generated palettes | P03 scale/colormap + P05 compatibility; complete palette not extracted |
+| Contour.cs | ContourArtist/IMappable and algorithm | P05 contour/fill compatibility; the current overlay does not replace this API |
+| Quiver.cs | Quiver Artist, bounds and shaft/head geometry | Geometry adapted in FieldOverlays, Artist/bounds/legend API not consolidated |
+| Plot3D.cs | Artist3D, Line3D/Scatter3D/Poly3D/Text3D, projection | P05 model/projection/backend; neither excluded nor implemented |
+| Text.cs | Fonts, TextMetrics, MathText | P05 typography/backend; fonts and licences to be preserved |
+| Ticks.cs | Locator/formatter, offset, log | P03/P05 axes; the current NiceTicks is not equivalent |
+| Fonts/*.ttf and LICENSE_DEJAVU | Third-party assets | P02/P05 notice and backend resources; not embedded |
+| HighLevelTests.cs | Original plotting API tests | P05 compatibility tests; archived, not run |
+| tools/oracle/gen_colormaps.py | Palette generation | Source tool to keep as provenance/generation; not core runtime |
 
-NavierStokes: LineChart/Series/options/Num/NiceTicks adattati; MarchingSquares adattato con contratto differente; FieldPlot/FieldToPng e ColorMap completa non sostituiti. MathemaSharp: Lines/Panels/Stems e Line hanno facade parziale; display, NaN-gap, tooltip e scale differiscono; Table/Tiles/Quote restano presentazione da classificare. JupyterSharp: host/assembly/notebook sono consumatori, non nuovo renderer; PySharpLib.Matplotlib disponibile solo come binario, nessuna API sorgente ricostruita.
+NavierStokes: LineChart/Series/options/Num/NiceTicks adapted; MarchingSquares adapted with a different contract; FieldPlot/FieldToPng and the complete ColorMap not replaced. MathemaSharp: Lines/Panels/Stems and Line have a partial facade; display, NaN-gap, tooltip and scales differ; Table/Tiles/Quote remain presentation to be classified. JupyterSharp: host/assembly/notebook are consumers, not a new renderer; PySharpLib.Matplotlib is available only as a binary, no source API reconstructed.
 
-## Inventario funzionale e decisioni
+## Functional inventory and decisions
 
-L'import iniziale dichiara 148 file (MathemaSharp 54, NDSharp 50, JupyterSharp 29, NavierStokes 15); il manifest resta la fonte puntuale della selezione euristica. Non è un inventario completo dei repository originali.
+The initial import declares 148 files (MathemaSharp 54, NDSharp 50, JupyterSharp 29, NavierStokes 15); the manifest remains the precise source of the heuristic selection. It is not a complete inventory of the original repositories.
 
-| Fonte | Materiale / dipendenze | Decisione |
+| Source | Material / dependencies | Decision |
 |---|---|---|
-| NavierStokes/Core/Charts.cs | SVG linee, scatter tramite flag, legenda/tick; field PNG scritto in C# con ZLib, color map, marching squares e frecce | Estrarre line/scatter e helper nella prima tranche; campi restano archivio fino a validazione dedicata. |
-| NavierStokes/Web/Shared/Chart.razor | Visualizza stringa SVG tramite MarkupString | Mantenere come esempio di adattatore host, non dipendenza del core. |
-| NavierStokes/Reports.cs, pagine e notebook | Consumatori di dati di simulazione | Non trasferire logica applicativa nella libreria. |
-| MathemaSharp/notebooks/shared/Charts.csx | Lines, Panels, Stems; Display.Html; tabelle, tile e quote | Riutilizzare in seguito composizione/presentazione; non importare il kernel. Duplicato concettuale delle linee NavierStokes, non secondo renderer attivo. |
-| NDSharp.Plot | Figure/Axes/Artists, contour, quiver, 3D, colormap, tick, layout e PNG | Patrimonio più ricco da conservare; separare modello matplotlib-shaped, backend Skia e adattamento dati prima di estrarlo. |
-| NDSharp.Plot.Tests/HighLevelTests.cs | Test ad alto livello dell'API precedente | Riferimento per futura compatibilità; non eseguiti dalla soluzione attiva. |
-| NDSharp.Plot/Fonts | DejaVu Sans, tre TTF e LICENSE_DEJAVU | Asset terzi, non incorporati nella libreria attuale. |
-| JupyterSharp | Notebook, kernel/host csproj e DLL NDSharp.Plot / PySharpLib.Matplotlib | Integrazione di display/runtime; le DLL non sono sorgente autorevole e non vanno ricompilate o redistribuite alla cieca. |
+| NavierStokes/Core/Charts.cs | SVG lines, scatter through a flag, legend/ticks; field PNG written in C# with ZLib, colour map, marching squares and arrows | Extract line/scatter and helpers in the first tranche; fields remain archive until dedicated validation. |
+| NavierStokes/Web/Shared/Chart.razor | Displays an SVG string through MarkupString | Keep as an example of a host adapter, not a core dependency. |
+| NavierStokes/Reports.cs, pages and notebook | Consumers of simulation data | Do not transfer application logic into the library. |
+| MathemaSharp/notebooks/shared/Charts.csx | Lines, Panels, Stems; Display.Html; tables, tiles and quotes | Reuse composition/presentation later; do not import the kernel. Conceptual duplicate of the NavierStokes lines, not a second active renderer. |
+| NDSharp.Plot | Figure/Axes/Artists, contour, quiver, 3D, colormap, ticks, layout and PNG | Richest asset to preserve; separate the matplotlib-shaped model, the Skia backend and data adaptation before extracting it. |
+| NDSharp.Plot.Tests/HighLevelTests.cs | High-level tests of the previous API | Reference for future compatibility; not run by the active solution. |
+| NDSharp.Plot/Fonts | DejaVu Sans, three TTFs and LICENSE_DEJAVU | Third-party assets, not embedded in the current library. |
+| JupyterSharp | Notebooks, kernel/host csproj and NDSharp.Plot / PySharpLib.Matplotlib DLLs | Display/runtime integration; the DLLs are not an authoritative source and must not be recompiled or redistributed blindly. |
 
-NDSharp.Plot richiede NDSharp, SkiaSharp 3.119.0 e native assets Linux/macOS; gli snapshot delle dipendenze non sono necessariamente completi. Le csproj applicative raccolte non implicano la presenza di tutte le classi richieste. Nessuno snapshot è stato compilato in questa tranche.
+NDSharp.Plot requires NDSharp, SkiaSharp 3.119.0 and Linux/macOS native assets; the dependency snapshots are not necessarily complete. The application csprojs collected do not imply the presence of all the required classes. No snapshot was compiled in this tranche.
 
-## Provenienza dell'estrazione
+## Provenance of the extraction
 
-`src/PlotSharp/PlotSharp/Charts.cs` deriva da `src/imports/NavierStokes/src/NavierStokes.Core/Charts.cs`: conservati Series, LineChartOptions, LineChart, Header, NiceTicks, Num, Esc e colori; esclusi campi/PNG/contour. Namespace cambiato; aggiunta validazione di coordinate, bounds, dimensioni e colori; rafforzata la guardia sui tick. Non è stata implementata da zero un'altra libreria grafica.
+`src/PlotSharp/PlotSharp/Charts.cs` derives from `src/imports/NavierStokes/src/NavierStokes.Core/Charts.cs`: Series, LineChartOptions, LineChart, Header, NiceTicks, Num, Esc and the colours were kept; fields/PNG/contour were excluded. Namespace changed; validation of coordinates, bounds, sizes and colours added; the guard on the ticks strengthened. Another graphics library was not implemented from scratch.
 
-Licenze: NDSharp include LICENSE e intestazioni MIT; i font hanno licenza distinta. JupyterSharp include LICENSE. La selezione NavierStokes e MathemaSharp non include un LICENSE: l'assenza non implica libertà di riuso. **Bloccare pubblicazione e redistribuzione dell'estrazione finché l'autore/proprietario non conferma i diritti e le attribuzioni.** Nessuna licenza globale è stata inventata per questo repository.
+Licences: NDSharp includes LICENSE and MIT headers; the fonts have a separate licence. JupyterSharp includes LICENSE. The NavierStokes and MathemaSharp selection does not include a LICENSE: its absence does not imply freedom of reuse. **Block publication and redistribution of the extraction until the author/owner confirms the rights and attributions.** No global licence was invented for this repository.
 
-## Confini
+## Boundaries
 
-Per ora un unico assembly piccolo: separare backend/adattatori solo quando esiste un secondo implementato. Il core non dipende da Microsoft.Extensions perché non ha servizi, configurazione o logging; tali componenti spettano alle future app/integrazioni. Non modificare gli originali né inserire indiscriminatamente gli import nella soluzione.
+For now a single small assembly: separate backends/adapters only when a second one is implemented. The core does not depend on Microsoft.Extensions because it has no services, configuration or logging; such components belong to the future apps/integrations. Do not modify the originals nor insert the imports indiscriminately into the solution.
 
-Test attivi: XML/escaping, line/scatter, input vuoti e incoerenti, colori/iniezione, dati non finiti, serie costanti, limiti, dimensioni, tick e cultura italiana. Non sono test di regressione visiva, di PNG o di compatibilità completa. Nessuna verifica visiva o notebook eseguito è dichiarata.
+Active tests: XML/escaping, line/scatter, empty and inconsistent inputs, colours/injection, non-finite data, constant series, limits, sizes, ticks and Italian culture. They are not visual regression tests, nor PNG or full-compatibility tests. No visual verification or executed notebook is claimed.
 
-## Quinta tranche
+## Fifth tranche
 
-`FieldOverlays.cs`: MarchingSquares deriva dall'algoritmo in NavierStokes.Core/Charts.cs (ordine dei bordi e pairing conservati). Aggiunti validazione eager, maschere, risultati Segment e rimozione dei segmenti degeneri. I casi a sella rimangono a pairing fisso: un asymptotic decider resta una futura opzione da confrontare, non una proprietà dichiarata dell'algoritmo attuale.
+`FieldOverlays.cs`: MarchingSquares derives from the algorithm in NavierStokes.Core/Charts.cs (edge order and pairing kept). Eager validation, masks, Segment results and removal of degenerate segments added. The saddle cases keep a fixed pairing: an asymptotic decider remains a future option to compare, not a declared property of the current algorithm.
 
-La geometria SVG quiver adatta la costruzione shaft/triangolo di `src/imports/NDSharp/src/NDSharp.Plot/Quiver.cs`, origine NDSharp, copyright Marco Parenzan, repository con licenza MIT in `src/imports/NDSharp/LICENSE`. La distribuzione dovrà conservare il notice MIT completo; il repository continua a non essere pronto alla distribuzione per i diritti NavierStokes ancora da confermare. Nessuna dipendenza SkiaSharp introdotta: testa in pixel (8 massimi) anziché points/DPI, Scale esplicita.
+The SVG quiver geometry adapts the shaft/triangle construction of `src/imports/NDSharp/src/NDSharp.Plot/Quiver.cs`, origin NDSharp, copyright Marco Parenzan, repository with MIT licence in `src/imports/NDSharp/LICENSE`. Distribution will have to keep the complete MIT notice; the repository continues not to be ready for distribution because of the NavierStokes rights still to be confirmed. No SkiaSharp dependency introduced: head in pixels (8 maximum) instead of points/DPI, explicit Scale.
 
-Heatmap interpreta valori e vettori ai centri delle celle; FieldExtent continua a descrivere bordi esterni. Overlays condividono plotW/plotH e orientamento del campo e usano clip GUID univoci. La maschera esclude un quadrilatero contour se uno dei campioni è escluso; quiver elimina solo i campioni mascherati, non le parti della freccia sopra altre celle escluse. Il mapping vettoriale può deformare angoli se l'aspect ratio fisico non è conservato.
+Heatmap interprets values and vectors at the cell centres; FieldExtent continues to describe the outer edges. Overlays share plotW/plotH and the field orientation and use unique GUID clips. The mask excludes a contour quadrilateral if one of the samples is excluded; quiver removes only the masked samples, not the parts of the arrow over other excluded cells. The vector mapping can distort angles if the physical aspect ratio is not preserved.
 
-66 test passanti, incluso campo lineare, saddle, equality, singleton, maschere, direzione vettoriale con entrambe le origini, shape/stride/color invalidi. Galleria eseguita con otto esempi XML validati. Nessuna verifica visiva o notebook eseguito dichiarata.
+66 passing tests, including linear field, saddle, equality, singleton, masks, vector direction with both origins, invalid shape/stride/colour. Gallery run with eight validated XML examples. No visual verification or executed notebook is claimed.
 
-## Quarta tranche
+## Fourth tranche
 
-`ColorScale.cs` separa normalizzazione dal renderer. Min/Max immutabili, valori saturati prima della sottrazione, colori ottenuti dalla palette esistente. Heatmap e colorbar condividono il contratto; le 128 strisce della colorbar campionano la stessa palette, con tick agli estremi e al centro. La legenda è opzionale e il layout predefinito delle heatmap precedenti è conservato.
+`ColorScale.cs` separates normalisation from the renderer. Immutable Min/Max, values saturated before the subtraction, colours obtained from the existing palette. Heatmap and colorbar share the contract; the colorbar's 128 stripes sample the same palette, with ticks at the extremes and in the centre. The legend is optional and the default layout of the previous heatmaps is preserved.
 
-`FieldExtent` descrive bordi esterni fisici; la griglia SVG è ancora uniforme. Non conserva l'aspect ratio fisico e non rappresenta coordinate non uniformi. Tick Y coerenti con OriginUpper, centri dei tooltip ancora espressi come indici. Mask true omette la cella prima di analizzarne il valore: non finiti mascherati sono validi, non mascherati rifiutati. Campo interamente mascherato ammesso solo con range esplicito. Questo non modifica la policy reject delle linee.
+`FieldExtent` describes physical outer edges; the SVG grid is still uniform. It does not preserve the physical aspect ratio and does not represent non-uniform coordinates. Y ticks consistent with OriginUpper, tooltip centres still expressed as indices. Mask true omits the cell before analysing its value: masked non-finite values are valid, unmasked ones are rejected. A fully masked field is admitted only with an explicit range. This does not change the reject policy of the lines.
 
-50 test attivi passanti; galleria con sette esempi eseguita e XML validato. Nessuna verifica visiva browser/notebook o migrazione dei repository originali è stata eseguita.
+50 active passing tests; gallery with seven examples run and XML validated. No visual browser/notebook verification or migration of the original repositories was performed.
 
-## Terza tranche
+## Third tranche
 
-Stems e BarWidth estendono Series nello stesso renderer, mantenendo assi, validazioni e clipping condivisi. `IndexedCharts.Stems` traduce il correlogramma MathemaSharp in serie di aste più due serie tratteggiate per la banda: nessun secondo motore SVG.
+Stems and BarWidth extend Series in the same renderer, keeping shared axes, validations and clipping. `IndexedCharts.Stems` translates the MathemaSharp correlogram into a series of stems plus two dashed series for the band: no second SVG engine.
 
-`Heatmap.cs` estende Charts tramite partial e usa Header/F/Num comuni. Nuovo percorso SVG a celle: orientamento predefinito [j,i] con j=0 in basso come NavierStokes, a differenza degli imshow che possono usare origine superiore. Scelta deliberata per una prima API senza dipendenze native: non è un port del PNG bilineare NavierStokes né una sostituzione compatibile di NDSharp.Axes.imshow. Quattro stop della palette NavierStokes sono riusati; interpolazione cromatica lineare, normalizzazione e saturazione separate dal mapping spaziale. Limite 100000 celle per contenere l'output; backend raster e colorbar ancora da estrarre.
+`Heatmap.cs` extends Charts through partial and uses the common Header/F/Num. New cell-based SVG path: default orientation [j,i] with j=0 at the bottom like NavierStokes, unlike imshow which may use an upper origin. A deliberate choice for a first API without native dependencies: it is neither a port of the NavierStokes bilinear PNG nor a compatible replacement of NDSharp.Axes.imshow. Four stops of the NavierStokes palette are reused; linear colour interpolation, normalisation and saturation separated from the spatial mapping. Limit of 100000 cells to contain the output; raster backend and colorbar still to be extracted.
 
-La galleria eseguita include ora sei esempi: linee, scatter, pannelli, stems, barre e heatmap. 31 test passanti, inclusi baseline positive/negative, band, orientamento, colori estremi/costanti, limiti e matrici vuote/non finite/sovradimensionate. Gli snapshot restano invariati; vincoli di licenza e assenza di controllo visivo restano validi.
+The executed gallery now includes six examples: lines, scatter, panels, stems, bars and heatmap. 31 passing tests, including positive/negative baselines, band, orientation, extreme/constant colours, limits and empty/non-finite/oversized matrices. The snapshots remain unchanged; licensing constraints and the absence of visual checks remain valid.
 
-## Seconda tranche
+## Second tranche
 
-`IndexedCharts.cs` è una facade host-independent ispirata a Line/Lines/Panels del materiale MathemaSharp: delega sempre a Charts.LineChart, non incorpora un secondo renderer. Non replica la policy originale dei gap NaN: il contratto rimane reject. Dashed si applica a path e legenda, gli ID di clipping usano GUID completi e il clip coincide con il rettangolo degli assi.
+`IndexedCharts.cs` is a host-independent facade inspired by Line/Lines/Panels of the MathemaSharp material: it always delegates to Charts.LineChart, it does not embed a second renderer. It does not replicate the original NaN-gap policy: the contract remains reject. Dashed applies to path and legend, the clipping IDs use full GUIDs and the clip coincides with the axes rectangle.
 
-`src/PlotSharp.Gallery/PlotSharp.Gallery/` è un eseguibile senza servizi/configurazione; genera `artifacts/gallery/index.html`, lines.svg, scatter.svg e panels.html. Eseguito con successo, con parsing XML degli esempi prima della scrittura. Gli output non sono snapshot di riferimento e si possono rigenerare. Test attivi totali: 19, inclusi mapping di estremi espliciti, scale indipendenti, copia dati, tratteggio e null text. Nessuna verifica browser o notebook è stata effettuata.
+`src/PlotSharp.Gallery/PlotSharp.Gallery/` is an executable without services/configuration; it generates `artifacts/gallery/index.html`, lines.svg, scatter.svg and panels.html. Run successfully, with XML parsing of the examples before writing. The outputs are not reference snapshots and can be regenerated. Total active tests: 19, including mapping of explicit extremes, independent scales, data copy, dashing and null text. No browser or notebook verification was performed.

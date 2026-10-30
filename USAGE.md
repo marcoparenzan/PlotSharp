@@ -154,13 +154,13 @@ var svg = Charts.LineChart(
 File.WriteAllText("chart.svg", svg);
 ```
 
-Aggiungere il riferimento dal progetto consumatore:
+Add the reference from the consumer project:
 
 ```sh
 dotnet add <consumer.csproj> reference <path>/src/PlotSharp/PlotSharp/PlotSharp.csproj
 ```
 
-Nei notebook passare `svg` al display HTML/SVG del kernel. PlotSharp restituisce testo: non invoca `Display.Html`. In Blazor un wrapper può visualizzare l'output con `MarkupString`; inserire solo SVG prodotto dalla libreria, non markup arbitrario dell'utente. Gli host non sono stati migrati o verificati in questa tranche.
+In notebooks pass `svg` to the kernel's HTML/SVG display. PlotSharp returns text: it does not call `Display.Html`. In Blazor a wrapper can show the output with `MarkupString`; insert only SVG produced by the library, not arbitrary user markup. The hosts were not migrated or verified in this tranche.
 
 ## Reference — API attiva
 
@@ -168,16 +168,16 @@ Namespace `PlotSharp`, classe statica `Charts`.
 
 | API | Contratto |
 |---|---|
-| `Series(Name, X, Y, Color, Markers=false, Line=true, Dashed=false, Stems=false, BarWidth=null)` | Array double accoppiati, non vuoti; colore esclusivamente `#RRGGBB`. Line e Markers possono coesistere. Gli array non sono copiati: non mutarli durante il rendering. |
-| `LineChart(series, options)` | Restituisce SVG completo con sfondo, titolo, assi, griglia e legenda quando ci sono più serie. Scatter: `Line=false, Markers=true`. |
+| `Series(Name, X, Y, Color, Markers=false, Line=true, Dashed=false, Stems=false, BarWidth=null)` | Paired, non-empty double arrays; colour exclusively `#RRGGBB`. Line and Markers can coexist. The arrays are not copied: do not mutate them during rendering. |
+| `LineChart(series, options)` | Returns a complete SVG with background, title, axes, grid and legend when there are several series. Scatter: `Line=false, Markers=true`. |
 | `LineChartOptions` | Title, Subtitle, XLabel, YLabel; Width=560, Height=340; XMin/XMax/YMin/YMax opzionali; Highlight opzionale `(X,Y,Label)`. |
 | `NiceTicks(min,max,target=5)` | Tick ordinati, scala 1/2/2.5/5/10. target da 1 a 100, estremi finiti ordinati. |
 | `Num(value)` | Formattazione numerica invariant; notazione scientifica per valori piccoli/grandi. |
 | Costanti colori | Surface, Ink, InkSecondary, InkMuted, Grid, Series1, Series2. |
 
-Dimensioni ammesse: Width 200–10000, Height 160–10000. Coordinate ed estremi: double finiti entro ±1e12. Dati vuoti, mismatch, colori non validi e limiti invertiti sono rifiutati con ArgumentException (o sottoclasse). NaN/Infinity sono rifiutati, non saltati. Serie costanti hanno intervallo espanso. I testi sono escaped; i colori validati. Non c'è serializzazione del modello né export PNG nella API attiva.
+Allowed sizes: Width 200–10000, Height 160–10000. Coordinates and extremes: finite doubles within ±1e12. Empty data, mismatches, invalid colours and inverted limits are rejected with ArgumentException (or a subclass). NaN/Infinity are rejected, not skipped. Constant series have an expanded range. Texts are escaped; colours validated. There is no model serialisation nor PNG export in the active API.
 
-Il renderer usa coordinate double e formattazione a due decimali per i pixel: non garantisce conservazione di differenze Decimal32/64/128 o grandi offset. Gli ID di clipping sono casuali: output semanticamente equivalente, non byte-identico. La gestione tipografica delle legende lunghe è ancora euristica.
+The renderer uses double coordinates and two-decimal formatting for pixels: it does not guarantee preservation of Decimal32/64/128 differences or large offsets. The clipping IDs are random: semantically equivalent output, not byte-identical. The typographic handling of long legends is still heuristic.
 
 ## Serie indicizzate e pannelli
 
@@ -190,9 +190,9 @@ var html = IndexedCharts.Panels("Componenti",
     new IndexedCharts.Line("Residuo", [-0.1, 0.2, -0.1]));
 ```
 
-`IndexedCharts.Line(Name,Y,Start=0,Dashed=false)` descrive X=Start+indice. `ToSeries(line,paletteIndex=0)` copia Y, genera X in double senza overflow int e applica una palette ciclica di otto colori. `Lines(title,params Line[])` restituisce SVG 720×260 con scala Y condivisa; `Panels(title,params Line[])` restituisce HTML con SVG 720×180, scale Y indipendenti. Nessuna funzione chiama Display.Html. Input vuoti e non finiti sono rifiutati come nel renderer base; la facade non replica la vecchia policy MathemaSharp dei gap NaN.
+`IndexedCharts.Line(Name,Y,Start=0,Dashed=false)` describes X=Start+index. `ToSeries(line,paletteIndex=0)` copies Y, generates X in double without int overflow and applies a cyclic palette of eight colours. `Lines(title,params Line[])` returns a 720×260 SVG with a shared Y scale; `Panels(title,params Line[])` returns HTML with 720×180 SVGs, independent Y scales. No function calls Display.Html. Empty and non-finite inputs are rejected as in the base renderer; the facade does not replicate the old MathemaSharp NaN-gap policy.
 
-`Dashed=true` applica il tratteggio 6/4 al path e alla legenda. Il clipping ora coincide esattamente con l'area del plot; gli ID usano GUID completi.
+`Dashed=true` applies the 6/4 dash to the path and to the legend. The clipping now coincides exactly with the plot area; the IDs use full GUIDs.
 
 ## Stems, barre e heatmap
 
@@ -205,14 +205,14 @@ var map = Charts.Heatmap(new double[,] { { 0, 1 }, { 2, 3 } },
     new() { Title = "Campo", Min = 0, Max = 3, OriginUpper = false });
 ```
 
-- `Series.Stems=true`: segmenti verticali da zero al valore; impostare `Line=false` per non collegare i punti. `Markers=true` aggiunge cerchi. Gli assi automatici includono zero.
-- `Series.BarWidth`: larghezza positiva in unità X, non pixel. Le barre vanno da zero a Y; gli assi automatici includono i bordi e zero. Limiti espliciti possono tagliare barre/aste tramite clip. Non ci sono ancora categorie, stacking o raggruppamento automatico; barre sovrapposte sono disegnate in ordine di serie. Se BarWidth e Stems coesistono prevalgono le barre.
-- `IndexedCharts.Stems(title,values,band=null,firstLag=1)`: correlogramma 720×260. Banda finita non negativa, due linee a ±band; null significa nessuna banda (NaN non è un sentinel ammesso). Y non è forzato simmetrico.
-- `Heatmap(field,options=null)`: SVG a celle, field[row,column]. `HeatmapOptions`: Title, Width=560, Height=340, Min/Max opzionali, OriginUpper=false. Riga zero in basso per default, in alto con OriginUpper=true. Sono ammesse anche matrici 1×1; da 1 a 100000 celle. Non mutare il campo durante rendering.
+- `Series.Stems=true`: vertical segments from zero to the value; set `Line=false` so as not to connect the points. `Markers=true` adds circles. Automatic axes include zero.
+- `Series.BarWidth`: positive width in X units, not pixels. Bars go from zero to Y; automatic axes include the edges and zero. Explicit limits can cut bars/stems through clipping. There are no categories, stacking or automatic grouping yet; overlapping bars are drawn in series order. If BarWidth and Stems coexist, bars prevail.
+- `IndexedCharts.Stems(title,values,band=null,firstLag=1)`: 720×260 correlogram. Finite non-negative band, two lines at ±band; null means no band (NaN is not an allowed sentinel). Y is not forced symmetric.
+- `Heatmap(field,options=null)`: cell-based SVG, field[row,column]. `HeatmapOptions`: Title, Width=560, Height=340, optional Min/Max, OriginUpper=false. Row zero at the bottom by default, at the top with OriginUpper=true. 1×1 matrices are also allowed; from 1 to 100000 cells. Do not mutate the field during rendering.
 - Normalizzazione heatmap: `(value-Min)/(Max-Min)` saturata in [0,1]; campo/range costante usa il colore centrale. Dati/limiti finiti entro ±1e12, limiti ordinati; NaN/Infinity rifiutati. La palette è sequenziale a quattro stop derivati da NavierStokes, non l'intera palette originale.
 - `SequentialColor(normalized)`: accetta double finiti, satura ai colori estremi, restituisce `#RRGGBB`.
 
-Heatmap include tooltip di cella e testo min/max; colorbar, tick spaziali e maschere sono opzionali (vedi sotto). Non include ancora interpolazione bilineare o PNG. Le celle sono rettangoli SVG: per campi grandi servirà il backend raster. La galleria ora genera anche `stems.svg`, `bars.svg`, `heatmap.svg`.
+Heatmap includes cell tooltips and min/max text; colorbar, spatial ticks and masks are optional (see below). It does not yet include bilinear interpolation or PNG. The cells are SVG rectangles: for large fields the raster backend will be needed. The gallery now also generates `stems.svg`, `bars.svg`, `heatmap.svg`.
 
 ## Campi fisici, maschere e colorbar
 
@@ -228,18 +228,18 @@ var normalized = scale.Normalize(15);
 var color = scale.Color(15);
 ```
 
-`ColorScale(Min,Max)` è immutabile: estremi finiti ordinati entro ±1e12; `Normalize(value)` satura valori finiti in [0,1], range costante → 0.5; `Color(value)` applica SequentialColor. La normalizzazione è condivisa fra campo e legenda, senza cambio di policy per le chiamate esistenti.
+`ColorScale(Min,Max)` is immutable: finite ordered extremes within ±1e12; `Normalize(value)` saturates finite values in [0,1], constant range → 0.5; `Color(value)` applies SequentialColor. The normalisation is shared between field and legend, with no change of policy for existing calls.
 
 Nuove proprietà `HeatmapOptions`:
 
 | Proprietà | Contratto |
 |---|---|
-| `ShowColorbar=false` | Legenda verticale opzionale, larghezza minima SVG 320. Riduce l'area del campo per non sovrapporsi; 128 strisce cromatiche, tick min/medio/max. Range costante: un solo colore e tick. |
+| `ShowColorbar=false` | Optional vertical legend, minimum SVG width 320. Reduces the field area so as not to overlap; 128 colour stripes, min/mid/max ticks. Constant range: a single colour and tick. |
 | `ColorbarLabel=""` | Testo escaped, nessun markup arbitrario. Etichette lunghe non hanno ancora layout automatico. |
-| `Extent=null` | `FieldExtent(XMin,XMax,YMin,YMax)` definisce **bordi esterni** del campo, non centri campionati. Estremi finiti entro ±1e12, strettamente crescenti. Attiva tick spaziali. X cresce verso destra; Y cresce verso l'alto con OriginUpper=false, verso il basso con true. |
-| `Mask=null` | Matrice bool della stessa forma del campo: true omette la cella ed esclude il valore dai limiti automatici. Valori NaN/Infinity sono ammessi solo se mascherati. Le celle mancanti mostrano lo sfondo, non un colore speciale. |
+| `Extent=null` | `FieldExtent(XMin,XMax,YMin,YMax)` defines the **outer edges** of the field, not sampled centres. Finite extremes within ±1e12, strictly increasing. Enables spatial ticks. X grows to the right; Y grows upwards with OriginUpper=false, downwards with true. |
+| `Mask=null` | Bool matrix of the same shape as the field: true omits the cell and excludes the value from the automatic limits. NaN/Infinity values are allowed only if masked. Missing cells show the background, not a special colour. |
 
-Un campo interamente mascherato richiede entrambi Min e Max espliciti; può mostrare una colorbar senza celle. La maschera non è copiata: non mutare field/Mask durante rendering. Il limite di 100000 riguarda tutte le celle, non solo quelle visibili. I tooltip restano indicizzati `[row,column]`; Extent cambia i tick, non la matrice né il numero delle celle. La galleria aggiunge `physical-field.svg`.
+A fully masked field requires both Min and Max explicit; it can show a colorbar without cells. The mask is not copied: do not mutate field/Mask during rendering. The 100000 limit applies to all cells, not only the visible ones. Tooltips remain indexed `[row,column]`; Extent changes the ticks, not the matrix nor the number of cells. The gallery adds `physical-field.svg`.
 
 ## Contour e quiver
 
@@ -254,14 +254,14 @@ var svg = Charts.Heatmap(new double[,] { { 0, 1 }, { 1, 2 } },
 var segments = Charts.MarchingSquares(new double[,] { { 0, 1 }, { 0, 1 } }, 0.5);
 ```
 
-- `MarchingSquares(field,level,mask=null)` restituisce `IReadOnlyList<Charts.Segment>` con X1/Y1/X2/Y2 in **indici campione**, non coordinate SVG/fisiche. Interpolazione lineare degli attraversamenti lungo i bordi; equality appartiene al lato alto. Campo almeno 1×1: senza quadrilateri il risultato è vuoto. Validazione immediata, stessi limiti di heatmap.
-- `HeatmapOptions.ContourLevels`: null disabilita; massimo 32 livelli finiti entro ±1e12, duplicati rimossi. ContourColor esclusivamente #RRGGBB. Il campo è interpretato come campionato ai **centri** delle celle: contour non arriva ai bordi esterni e non extrapola. Non ci sono isolinee etichettate o riempimenti.
-- Le celle marching squares con almeno un vertice mascherato sono escluse. Segmenti di lunghezza zero omessi; celle costanti al livello non generano contour. Nei casi a sella con quattro attraversamenti si conserva la coppia fissa per ordine dei bordi dell'originale NavierStokes: comportamento deterministico, **non un asymptotic decider**, né una garanzia topologica del campo bilineare.
-- `VectorField(U,V,Scale=1,Stride=1,Color="#0b0b0b")`: matrici della stessa forma della heatmap, valori finiti entro ±1e12 salvo campioni mascherati. Frecce dai centri delle celle; Scale positivo finito ≤1e6, Stride intero da 1 a 100000, colore #RRGGBB. Stride sottocampiona righe e colonne partendo da indice 0.
-- Senza Extent, U/V sono spostamenti in unità indice; con Extent sono spostamenti nelle sue unità fisiche. V positivo segue l'asse Y: verso alto con OriginUpper=false, verso basso con true. Scale non è autoscale. Proiezioni non finite o oltre ±1e7 pixel rifiutate.
-- Frecce proiettate più corte di 0.5 pixel omesse, testa ridotta sulle frecce corte. Contour e quiver sono sovrapposti in quest'ordine, ritagliati all'area del campo; la maschera sopprime i campioni, non ritaglia geometricamente frecce che attraversano una cella mascherata.
+- `MarchingSquares(field,level,mask=null)` returns `IReadOnlyList<Charts.Segment>` with X1/Y1/X2/Y2 in **sample indices**, not SVG/physical coordinates. Linear interpolation of the crossings along the edges; equality belongs to the upper side. Field at least 1×1: without quadrilaterals the result is empty. Immediate validation, same limits as heatmap.
+- `HeatmapOptions.ContourLevels`: null disables; at most 32 finite levels within ±1e12, duplicates removed. ContourColor exclusively #RRGGBB. The field is interpreted as sampled at the cell **centres**: contour does not reach the outer edges and does not extrapolate. There are no labelled isolines or fills.
+- Marching-squares cells with at least one masked vertex are excluded. Zero-length segments omitted; cells constant at the level generate no contour. In saddle cases with four crossings the fixed pair by edge order of the original NavierStokes is kept: deterministic behaviour, **not an asymptotic decider**, nor a topological guarantee of the bilinear field.
+- `VectorField(U,V,Scale=1,Stride=1,Color="#0b0b0b")`: matrices of the same shape as the heatmap, finite values within ±1e12 except masked samples. Arrows from the cell centres; Scale positive finite ≤1e6, Stride integer from 1 to 100000, colour #RRGGBB. Stride subsamples rows and columns starting from index 0.
+- Without Extent, U/V are displacements in index units; with Extent they are displacements in its physical units. Positive V follows the Y axis: upwards with OriginUpper=false, downwards with true. Scale is not autoscale. Non-finite projections or beyond ±1e7 pixels rejected.
+- Projected arrows shorter than 0.5 pixel omitted, head reduced on short arrows. Contour and quiver are overlaid in this order, clipped to the field area; the mask suppresses the samples, it does not geometrically clip arrows crossing a masked cell.
 
-Queste API non sono compatibili automaticamente con NDSharp.Quiver o NavierStokes.FieldPlot. Non includono streamlines, contour stitching o coordinate non uniformi. La galleria aggiunge `overlays.svg`.
+These APIs are not automatically compatible with NDSharp.Quiver or NavierStokes.FieldPlot. They do not include streamlines, contour stitching or non-uniform coordinates. The gallery adds `overlays.svg`.
 
 ## Rigenerare il catalogo degli import
 
@@ -271,13 +271,13 @@ Dalla root del repository:
 dotnet run --project src/tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj -- .
 ```
 
-Il tool scrive esclusivamente `ops/inventory/files.csv`, `public-declarations.csv`, `notebook-calls.csv`, `references.csv`; non cambia gli snapshot o il manifest. È uno scanner lessicale: righe public e chiamate Chart/Charts/IndexedCharts/plt nelle code cells, non una verifica di compatibilità semantica. Non include i backup `.ralfai/undo` nell'analisi dei consumatori correnti. Consultare ARCHITECTURE per limiti e matrice di destinazione.
+The tool writes exclusively `ops/inventory/files.csv`, `public-declarations.csv`, `notebook-calls.csv`, `references.csv`; it does not change the snapshots or the manifest. It is a lexical scanner: public lines and Chart/Charts/IndexedCharts/plt calls in code cells, not a semantic compatibility verification. It does not include the `.ralfai/undo` backups in the analysis of the current consumers. See ARCHITECTURE for limits and the destination matrix.
 
 ## Migrazione futura
 
-- NavierStokes line/scatter: sostituire namespace `NavierStokes.Core` con `PlotSharp` nei punti che usano queste API; non eliminare ancora FieldPlot/FieldToPng.
-- MathemaSharp: usare `IndexedCharts.Line` e `IndexedCharts.Lines/Panels`, passando il risultato al display HTML del kernel. La facade supporta Start, Dashed e Stems con banda opzionale. Table/Tiles/Quote sono presentazione, non Charts.
-- NDSharp: mantenere Figure/Axes esistenti fino a disponibilità di una facade compatibile; l'adattatore NDArray deve stare fuori dal nucleo.
-- JupyterSharp: host di display e distribuzione assembly, non fonte di un nuovo renderer. Non sostituire DLL negli snapshot.
+- NavierStokes line/scatter: replace namespace `NavierStokes.Core` with `PlotSharp` where these APIs are used; do not yet remove FieldPlot/FieldToPng.
+- MathemaSharp: use `IndexedCharts.Line` and `IndexedCharts.Lines/Panels`, passing the result to the kernel's HTML display. The facade supports Start, Dashed and Stems with an optional band. Table/Tiles/Quote are presentation, not Charts.
+- NDSharp: keep the existing Figure/Axes until a compatible facade is available; the NDArray adapter must stay outside the core.
+- JupyterSharp: display host and assembly distribution, not the source of a new renderer. Do not replace DLLs in the snapshots.
 
-Queste sono istruzioni di pianificazione, non migrazioni già eseguite.
+These are planning instructions, not migrations already carried out.
