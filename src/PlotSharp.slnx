@@ -8,6 +8,10 @@
   <Folder Name="/Gallery/">
     <Project Path="PlotSharp.Gallery/PlotSharp.Gallery/PlotSharp.Gallery.csproj" />
   </Folder>
+  <Folder Name="/Cli/">
+    <Project Path="PlotSharp.Cli/PlotSharp.Cli/PlotSharp.Cli.csproj" />
+    <Project Path="PlotSharp.Cli.Tests/PlotSharp.Cli.Tests/PlotSharp.Cli.Tests.csproj" />
+  </Folder>
   <Folder Name="/Tools/">
     <Project Path="tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj" />
   </Folder>
