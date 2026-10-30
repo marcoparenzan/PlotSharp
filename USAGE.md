@@ -235,7 +235,7 @@ Nuove proprietà `HeatmapOptions`:
 | Proprietà | Contratto |
 |---|---|
 | `ShowColorbar=false` | Optional vertical legend, minimum SVG width 320. Reduces the field area so as not to overlap; 128 colour stripes, min/mid/max ticks. Constant range: a single colour and tick. |
-| `ColorbarLabel=""` | Testo escaped, nessun markup arbitrario. Etichette lunghe non hanno ancora layout automatico. |
+| `ColorbarLabel=""` | Text is escaped, no arbitrary markup. Long labels do not yet have automatic layout. |
 | `Extent=null` | `FieldExtent(XMin,XMax,YMin,YMax)` defines the **outer edges** of the field, not sampled centres. Finite extremes within ±1e12, strictly increasing. Enables spatial ticks. X grows to the right; Y grows upwards with OriginUpper=false, downwards with true. |
 | `Mask=null` | Bool matrix of the same shape as the field: true omits the cell and excludes the value from the automatic limits. NaN/Infinity values are allowed only if masked. Missing cells show the background, not a special colour. |
 
@@ -263,9 +263,9 @@ var segments = Charts.MarchingSquares(new double[,] { { 0, 1 }, { 0, 1 } }, 0.5)
 
 These APIs are not automatically compatible with NDSharp.Quiver or NavierStokes.FieldPlot. They do not include streamlines, contour stitching or non-uniform coordinates. The gallery adds `overlays.svg`.
 
-## Rigenerare il catalogo degli import
+## Regenerating the import catalogue
 
-Dalla root del repository:
+From the repository root:
 
 ```sh
 dotnet run --project src/tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj -- .
