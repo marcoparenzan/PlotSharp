@@ -56,7 +56,7 @@ public static class IndexedCharts
         if (lines.Length == 0) throw new ArgumentException("At least one panel is required.", nameof(lines));
         var html = new StringBuilder("<section><h2>").Append(WebUtility.HtmlEncode(title)).Append("</h2>");
         for (int i = 0; i < lines.Length; i++)
-            html.Append(Charts.LineChart([ToSeries(lines[i], i)], new() { Title = lines[i].Name, Width = 720, Height = 180, AllowLineGaps = true, PointTooltips = true, PreserveBoundaryMarkers = true, SeparateLegendRow = true }));
+            html.Append(Charts.LineChart([ToSeries(lines[i], i)], new() { Title = lines[i].Name, IdSeed = "panel" + i, Width = 720, Height = 180, AllowLineGaps = true, PointTooltips = true, PreserveBoundaryMarkers = true, SeparateLegendRow = true }));
         return html.Append("</section>").ToString();
     }
 }

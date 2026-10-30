@@ -4,7 +4,7 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.1.1-net11-preview.1</Version>
+    <Version>0.1.1-net11-preview.2</Version>
     <Authors>Marco Parenzan</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>PlotSharp: dependency-free (BCL only) charts rendered to SVG, HTML and PNG, plus shared contour kernels.</Description>

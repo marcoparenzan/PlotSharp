@@ -19,14 +19,16 @@ public static partial class GradientColorbar
         if (!double.IsFinite(x) || !double.IsFinite(y) || Math.Abs(x) > 1e7 || Math.Abs(y) > 1e7
             || !double.IsFinite(height) || !double.IsFinite(width) || height <= 0 || width <= 0 || height > 10000 || width > 10000)
             throw new ArgumentException("Invalid colorbar projection.");
-        string id = "cb" + Guid.NewGuid().ToString("N")[..8];
-        var svg = new StringBuilder($"<defs><linearGradient id='{id}' x1='0' y1='1' x2='0' y2='0'>");
+        var stops = new StringBuilder();
         for (int k = 0; k <= 10; k++)
         {
             string shade = color(k / 10.0);
             if (shade is null || !HexColor().IsMatch(shade)) throw new ArgumentException("Color callback must return #RRGGBB.", nameof(color));
-            svg.Append($"<stop offset='{k * 10}%' stop-color='{shade}'/>");
+            stops.Append($"<stop offset='{k * 10}%' stop-color='{shade}'/>");
         }
+        string id = SvgId.For("cb", stops.ToString(), 8);
+        var svg = new StringBuilder($"<defs><linearGradient id='{id}' x1='0' y1='1' x2='0' y2='0'>");
+        svg.Append(stops);
         svg.Append("</linearGradient></defs>");
         svg.Append($"<rect x='{F(x)}' y='{F(y)}' width='{F(width)}' height='{F(height)}' fill='url(#{id})' rx='2'/>");
         foreach (double t in new[] { 0.0, 0.5, 1.0 })

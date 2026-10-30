@@ -72,7 +72,7 @@ public static partial class Charts
         sb.Append("</g>");
         if (o.ContourLevels is not null || o.Vectors is not null)
         {
-            string clip = "field" + Guid.NewGuid().ToString("N");
+            string clip = SvgId.For("field", $"64|48|{F(plotW)}|{F(plotH)}");
             sb.Append($"<clipPath id='{clip}'><rect x='64' y='48' width='{F(plotW)}' height='{F(plotH)}'/></clipPath><g clip-path='url(#{clip})'>");
             AppendOverlays(sb, field, o, plotW, plotH);
             sb.Append("</g>");

@@ -28,6 +28,8 @@ public static partial class Charts
         public string Title { get; init; } = "";
         public string Subtitle { get; init; } = "";
         public string XLabel { get; init; } = "";
+        /// <summary>Mixed into the generated element ids. Ids are derived from the chart, so charts with the same geometry get the same ids; give each chart that shares one SVG or HTML page a different seed to keep ids unique there (IndexedCharts.Panels does).</summary>
+        public string IdSeed { get; init; } = "";
         public string YLabel { get; init; } = "";
         /// <summary>Allow NaN Y samples as line gaps; X, infinity, stems and bars remain strict. Each series needs a finite Y.</summary>
         public bool AllowLineGaps { get; init; }
@@ -112,7 +114,7 @@ public static partial class Charts
 
         var pointOverlays = new StringBuilder();
         bool CenterInDomain(double x, double y) => x >= xmin && x <= xmax && y >= ymin && y <= ymax;
-        string cid = "clip" + Guid.NewGuid().ToString("N");
+        string cid = SvgId.For("clip", $"{o.IdSeed}|{left}|{top}|{pw}|{ph}");
         sb.Append($"<clipPath id='{cid}'><rect x='{left}' y='{top}' width='{pw}' height='{ph}'/></clipPath><g clip-path='url(#{cid})'>");
         foreach (var s in series)
         {
