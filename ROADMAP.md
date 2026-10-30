@@ -16,7 +16,7 @@ This section prevails over the tables and the historical notes further down (R01
 - **Shared and already consumed:** NavierStokes line/scatter and FieldPlot (palette, RGB8 encoder, node sampler, colour limits, arrows, colorbar, layout, assembly, contour); linear contours, physical sampler and band selection of NDSharp.Plot; eight MathemaSharp notebooks.
 - **Still local in the consumers:** palette/alpha/native raster and Skia renderer of NDSharp.Plot, Figure/Axes/Artists, the NavierStokes article notebook, the legacy MathemaSharp renderer kept in the paths not migrated.
 - **Effective dependencies on PlotSharp** (ProjectReference in the active sources): `NDSharp.Plot`, `NavierStokes.Core`, besides `PlotSharp.Tests` and `PlotSharp.Gallery`. MathemaSharp consumes through an opt-in source-build facade.
-- **Unchanged:** 0/4 families complete, no package published, rights (P02/B01) unresolved.
+- **Unchanged:** 0/4 families complete, no package published. Rights (P02/B01): the code is the author's own and MIT since 2026-10-29; only the third-party notices (fonts) remain.
 - **Version control:** the repository has been under git since 2026-10-29 (baseline commit `dfc7b2b`).
 
 Update 2026-10-28: ecosystem gate run successfully, including the two NuGet pilots. Added in MathemaSharp the opt-in pilot `03-indexed-charts.ipynb` and the facade `notebooks/shared/PlotSharpCharts.csx`: Lines, Panels and Stems delegate to IndexedCharts, four SVGs run and XML-validated. It does not amount to a complete migration of MathemaSharp: legacy renderer kept, non-finite data and layout not equivalent, visual verification still open. The local counts below are PlotSharp's historical baseline; the central gate is documented in MathemaSharp/ROADMAP.md. PNG/Skia and Figure/Axes compatibility are to be consolidated, not already available.
@@ -175,7 +175,7 @@ MathemaSharp/Core/03-complex-signals.ipynb uses the PlotSharp bootstrap instead 
 | End-to-end notebooks | **Partial, run** | Three JupyterSharp pilots and eight JupyterNet application notebooks; XML verified, partial visual review |
 | Adoption in the repositories of origin | **0/4 complete; D01–D03 partial, D04 pilots only** | MathemaSharp Core/03, TimeSeries/06–10 and scenarios A1/D1 migrated and verified; other paths and families open |
 | Active dependencies | **2 internal, 2 external** | PlotSharp.Tests and PlotSharp.Gallery in the solution; NDSharp.Plot and NavierStokes.Core reference the library from their own repositories |
-| Distribution | **Blocked** | NavierStokes/MathemaSharp rights to confirm; no package published |
+| Distribution | **Not published** | MIT since 2026-10-29, so not blocked for rights; publishing is a separate decision (public contract P03 and the font notices first) |
 | Documentation | **Present, to be maintained** | README, USAGE/Reference, ARCHITECTURE, this register |
 
 **Global completion: not reached and not expressed as a percentage.** The denominator of the original APIs is not yet complete. The 227 tests are not a measure of coverage of the whole imported heritage. The 0/4 ratio measures only the adoption of the four known families, not the completion of the product.
@@ -206,7 +206,7 @@ P01 remains **in progress**. D01 and D02 are partial; D03/D04 not completed, 0/4
 | ID | Milestone | State | Depends on | Completion criterion |
 |---|---|---|---|---|
 | P01 | Catalogue and provenance | In progress | — | Every imported API/renderer/asset/test classified; missing dependencies identified; source → destination → kept/adapted/excluded matrix approved |
-| P02 | Rights and attributions | Blocked | P01 | Licences verified for all the extracted code; third-party notices and authorisations present; documented decision on the package licence |
+| P02 | Rights and attributions | Largely done | P01 | Decision taken on 2026-10-29: the code is the author's own and MIT. Remaining: third-party notices (DejaVu fonts) shipped with any distribution; origin of the `src/imports` snapshots (suite L3) |
 | P03 | Public contract of the core | In progress | P01 | Series, axes, layout, styles, non-finite data, precision and serialisation/export defined; API/versioning and compatibility documented; contract tests |
 | P04 | SVG renderer consolidation | In progress | P03 | Selected SVG features equivalent or differences approved; numerical/geometric and layout cases verified; duplicates destined to facades rather than new engines |
 | P05 | NDSharp.Plot and raster consolidation | In progress (D03 partial: contour/sampler/bands) | P01, P03 | Figure/Axes/Artists, PNG/Skia, fonts, tick/layout and NDArray adaptation separated coherently; relevant original tests run or replaced with equivalents; native platforms verified |
@@ -290,7 +290,7 @@ PySharpLib.Matplotlib is a **dependency/integration to investigate**, not a fift
 
 Currently the core uses only .NET/BCL; no dependency on NDSharp, SkiaSharp, Blazor or kernels. Future renderers/adapters must depend on the core, never the other way round.
 
-- **B01 — rights:** NavierStokes and MathemaSharp licences/attributions not verified in the collected selection. NDSharp includes MIT and fonts with a separate licence; keep complete notices when distributed.
+- **B01 — rights (resolved in substance):** NavierStokes, MathemaSharp and NDSharp are the author's own code, MIT since 2026-10-29. Fonts have a separate licence: keep complete notices when distributed; the origin of the snapshots is still to be audited (suite L3).
 - **B02 — completeness of sources:** heuristic import; csproj present do not guarantee complete dependencies/classes. Targeted recovery needed for real integrations.
 - **B03 — compatibility contract:** choose public model and facade without losing Figure/Axes capabilities or multiplying renderers.
 - **B04 — precision:** double, ±1e12 limits, rounded pixels; Generic Math/Decimal normalisation unresolved.

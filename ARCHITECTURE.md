@@ -61,7 +61,7 @@ NDSharp.Plot requires NDSharp, SkiaSharp 3.119.0 and Linux/macOS native assets; 
 
 `src/PlotSharp/PlotSharp/Charts.cs` derives from `src/imports/NavierStokes/src/NavierStokes.Core/Charts.cs`: Series, LineChartOptions, LineChart, Header, NiceTicks, Num, Esc and the colours were kept; fields/PNG/contour were excluded. Namespace changed; validation of coordinates, bounds, sizes and colours added; the guard on the ticks strengthened. Another graphics library was not implemented from scratch.
 
-Licences: NDSharp includes LICENSE and MIT headers; the fonts have a separate licence. JupyterSharp includes LICENSE. The NavierStokes and MathemaSharp selection does not include a LICENSE: its absence does not imply freedom of reuse. **Block publication and redistribution of the extraction until the author/owner confirms the rights and attributions.** No global licence was invented for this repository.
+Licences: NDSharp includes LICENSE and MIT headers; the fonts have a separate licence. JupyterSharp includes LICENSE. NavierStokes, MathemaSharp, NDSharp and JupyterSharp are the author's own code, and since the decision of 2026-10-29 the whole suite, this repository included, is MIT, Copyright (c) 2026 Marco Parenzan. The snapshots in `src/imports` do not all carry their own LICENSE file; their origin is not audited (suite L3). The DejaVu fonts keep their separate licence and notice. Publishing a package is a separate decision, no longer blocked for rights.
 
 ## Boundaries
 
@@ -73,7 +73,7 @@ Active tests: XML/escaping, line/scatter, empty and inconsistent inputs, colours
 
 `FieldOverlays.cs`: MarchingSquares derives from the algorithm in NavierStokes.Core/Charts.cs (edge order and pairing kept). Eager validation, masks, Segment results and removal of degenerate segments added. The saddle cases keep a fixed pairing: an asymptotic decider remains a future option to compare, not a declared property of the current algorithm.
 
-The SVG quiver geometry adapts the shaft/triangle construction of `src/imports/NDSharp/src/NDSharp.Plot/Quiver.cs`, origin NDSharp, copyright Marco Parenzan, repository with MIT licence in `src/imports/NDSharp/LICENSE`. Distribution will have to keep the complete MIT notice; the repository continues not to be ready for distribution because of the NavierStokes rights still to be confirmed. No SkiaSharp dependency introduced: head in pixels (8 maximum) instead of points/DPI, explicit Scale.
+The SVG quiver geometry adapts the shaft/triangle construction of `src/imports/NDSharp/src/NDSharp.Plot/Quiver.cs`, origin NDSharp, copyright Marco Parenzan, repository with MIT licence in `src/imports/NDSharp/LICENSE`. Distribution has to keep the complete MIT notice. No SkiaSharp dependency introduced: head in pixels (8 maximum) instead of points/DPI, explicit Scale.
 
 Heatmap interprets values and vectors at the cell centres; FieldExtent continues to describe the outer edges. Overlays share plotW/plotH and the field orientation and use unique GUID clips. The mask excludes a contour quadrilateral if one of the samples is excluded; quiver removes only the masked samples, not the parts of the arrow over other excluded cells. The vector mapping can distort angles if the physical aspect ratio is not preserved.
 
