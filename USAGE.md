@@ -148,9 +148,9 @@ Four MathemaSharp notebooks use the source-build bootstrap: Core/03 and TimeSeri
 ```csharp
 using PlotSharp;
 var svg = Charts.LineChart(
-    [new Charts.Series("Temperatura", [0, 1, 2], [3, 5, 4], "#2a78d6"),
-     new Charts.Series("Misure", [0, 1, 2], [3, 4, 5], "#eb6834", Markers: true, Line: false)],
-    new Charts.LineChartOptions { Title = "Confronto", XLabel = "Tempo", YLabel = "°C" });
+    [new Charts.Series("Temperature", [0, 1, 2], [3, 5, 4], "#2a78d6"),
+     new Charts.Series("Measurements", [0, 1, 2], [3, 4, 5], "#eb6834", Markers: true, Line: false)],
+    new Charts.LineChartOptions { Title = "Comparison", XLabel = "Time", YLabel = "°C" });
 File.WriteAllText("chart.svg", svg);
 ```
 
@@ -162,64 +162,64 @@ dotnet add <consumer.csproj> reference <path>/src/PlotSharp/PlotSharp/PlotSharp.
 
 In notebooks pass `svg` to the kernel's HTML/SVG display. PlotSharp returns text: it does not call `Display.Html`. In Blazor a wrapper can show the output with `MarkupString`; insert only SVG produced by the library, not arbitrary user markup. The hosts were not migrated or verified in this tranche.
 
-## Reference — API attiva
+## Reference — active API
 
 Namespace `PlotSharp`, classe statica `Charts`.
 
-| API | Contratto |
+| API | Contract |
 |---|---|
 | `Series(Name, X, Y, Color, Markers=false, Line=true, Dashed=false, Stems=false, BarWidth=null)` | Paired, non-empty double arrays; colour exclusively `#RRGGBB`. Line and Markers can coexist. The arrays are not copied: do not mutate them during rendering. |
 | `LineChart(series, options)` | Returns a complete SVG with background, title, axes, grid and legend when there are several series. Scatter: `Line=false, Markers=true`. |
-| `LineChartOptions` | Title, Subtitle, XLabel, YLabel; Width=560, Height=340; XMin/XMax/YMin/YMax opzionali; Highlight opzionale `(X,Y,Label)`. |
-| `NiceTicks(min,max,target=5)` | Tick ordinati, scala 1/2/2.5/5/10. target da 1 a 100, estremi finiti ordinati. |
-| `Num(value)` | Formattazione numerica invariant; notazione scientifica per valori piccoli/grandi. |
-| Costanti colori | Surface, Ink, InkSecondary, InkMuted, Grid, Series1, Series2. |
+| `LineChartOptions` | Title, Subtitle, XLabel, YLabel; Width=560, Height=340; optional XMin/XMax/YMin/YMax; optional Highlight `(X,Y,Label)`. |
+| `NiceTicks(min,max,target=5)` | Ordered ticks, 1/2/2.5/5/10 scale. target from 1 to 100, finite ordered extremes. |
+| `Num(value)` | Invariant numeric formatting; scientific notation for small/large values. |
+| Colour constants | Surface, Ink, InkSecondary, InkMuted, Grid, Series1, Series2. |
 
 Allowed sizes: Width 200–10000, Height 160–10000. Coordinates and extremes: finite doubles within ±1e12. Empty data, mismatches, invalid colours and inverted limits are rejected with ArgumentException (or a subclass). NaN/Infinity are rejected, not skipped. Constant series have an expanded range. Texts are escaped; colours validated. There is no model serialisation nor PNG export in the active API.
 
 The renderer uses double coordinates and two-decimal formatting for pixels: it does not guarantee preservation of Decimal32/64/128 differences or large offsets. The clipping IDs are random: semantically equivalent output, not byte-identical. The typographic handling of long legends is still heuristic.
 
-## Serie indicizzate e pannelli
+## Indexed series and panels
 
 ```csharp
-var svg = IndexedCharts.Lines("Previsioni",
-    new IndexedCharts.Line("Storico", [2, 4, 3]),
+var svg = IndexedCharts.Lines("Forecasts",
+    new IndexedCharts.Line("History", [2, 4, 3]),
     new IndexedCharts.Line("Forecast", [3, 5, 6], Start: 2, Dashed: true));
-var html = IndexedCharts.Panels("Componenti",
+var html = IndexedCharts.Panels("Components",
     new IndexedCharts.Line("Trend", [100, 110, 120]),
-    new IndexedCharts.Line("Residuo", [-0.1, 0.2, -0.1]));
+    new IndexedCharts.Line("Residual", [-0.1, 0.2, -0.1]));
 ```
 
 `IndexedCharts.Line(Name,Y,Start=0,Dashed=false)` describes X=Start+index. `ToSeries(line,paletteIndex=0)` copies Y, generates X in double without int overflow and applies a cyclic palette of eight colours. `Lines(title,params Line[])` returns a 720×260 SVG with a shared Y scale; `Panels(title,params Line[])` returns HTML with 720×180 SVGs, independent Y scales. No function calls Display.Html. Empty and non-finite inputs are rejected as in the base renderer; the facade does not replicate the old MathemaSharp NaN-gap policy.
 
 `Dashed=true` applies the 6/4 dash to the path and to the legend. The clipping now coincides exactly with the plot area; the IDs use full GUIDs.
 
-## Stems, barre e heatmap
+## Stems, bars and heatmap
 
 ```csharp
 var acf = IndexedCharts.Stems("ACF", [0.7, 0.3, -0.2], band: 0.2, firstLag: 1);
 var bars = Charts.LineChart(
-    [new Charts.Series("Bilancio", [0, 1, 2], [4, -2, 3], Charts.Series1,
-        Line: false, BarWidth: 0.8)], new() { Title = "Bilancio" });
+    [new Charts.Series("Balance", [0, 1, 2], [4, -2, 3], Charts.Series1,
+        Line: false, BarWidth: 0.8)], new() { Title = "Balance" });
 var map = Charts.Heatmap(new double[,] { { 0, 1 }, { 2, 3 } },
-    new() { Title = "Campo", Min = 0, Max = 3, OriginUpper = false });
+    new() { Title = "Field", Min = 0, Max = 3, OriginUpper = false });
 ```
 
 - `Series.Stems=true`: vertical segments from zero to the value; set `Line=false` so as not to connect the points. `Markers=true` adds circles. Automatic axes include zero.
 - `Series.BarWidth`: positive width in X units, not pixels. Bars go from zero to Y; automatic axes include the edges and zero. Explicit limits can cut bars/stems through clipping. There are no categories, stacking or automatic grouping yet; overlapping bars are drawn in series order. If BarWidth and Stems coexist, bars prevail.
 - `IndexedCharts.Stems(title,values,band=null,firstLag=1)`: 720×260 correlogram. Finite non-negative band, two lines at ±band; null means no band (NaN is not an allowed sentinel). Y is not forced symmetric.
 - `Heatmap(field,options=null)`: cell-based SVG, field[row,column]. `HeatmapOptions`: Title, Width=560, Height=340, optional Min/Max, OriginUpper=false. Row zero at the bottom by default, at the top with OriginUpper=true. 1×1 matrices are also allowed; from 1 to 100000 cells. Do not mutate the field during rendering.
-- Normalizzazione heatmap: `(value-Min)/(Max-Min)` saturata in [0,1]; campo/range costante usa il colore centrale. Dati/limiti finiti entro ±1e12, limiti ordinati; NaN/Infinity rifiutati. La palette è sequenziale a quattro stop derivati da NavierStokes, non l'intera palette originale.
-- `SequentialColor(normalized)`: accetta double finiti, satura ai colori estremi, restituisce `#RRGGBB`.
+- Heatmap normalisation: `(value-Min)/(Max-Min)` saturated in [0,1]; a constant field/range uses the central colour. Finite data/limits within ±1e12, ordered limits; NaN/Infinity rejected. The palette is a sequential four-stop one derived from NavierStokes, not the whole original palette.
+- `SequentialColor(normalized)`: accepts finite doubles, saturates at the extreme colours, returns `#RRGGBB`.
 
 Heatmap includes cell tooltips and min/max text; colorbar, spatial ticks and masks are optional (see below). It does not yet include bilinear interpolation or PNG. The cells are SVG rectangles: for large fields the raster backend will be needed. The gallery now also generates `stems.svg`, `bars.svg`, `heatmap.svg`.
 
-## Campi fisici, maschere e colorbar
+## Physical fields, masks and colorbar
 
 ```csharp
 var svg = Charts.Heatmap(new double[,] { { double.NaN, 10 }, { 15, 25 } },
     new() {
-        Title = "Temperatura", ShowColorbar = true, ColorbarLabel = "°C",
+        Title = "Temperature", ShowColorbar = true, ColorbarLabel = "°C",
         Extent = new FieldExtent(0, 2, -1, 1),
         Mask = new bool[,] { { true, false }, { false, false } }
     });
@@ -230,9 +230,9 @@ var color = scale.Color(15);
 
 `ColorScale(Min,Max)` is immutable: finite ordered extremes within ±1e12; `Normalize(value)` saturates finite values in [0,1], constant range → 0.5; `Color(value)` applies SequentialColor. The normalisation is shared between field and legend, with no change of policy for existing calls.
 
-Nuove proprietà `HeatmapOptions`:
+New `HeatmapOptions` properties:
 
-| Proprietà | Contratto |
+| Property | Contract |
 |---|---|
 | `ShowColorbar=false` | Optional vertical legend, minimum SVG width 320. Reduces the field area so as not to overlap; 128 colour stripes, min/mid/max ticks. Constant range: a single colour and tick. |
 | `ColorbarLabel=""` | Text is escaped, no arbitrary markup. Long labels do not yet have automatic layout. |
@@ -241,12 +241,12 @@ Nuove proprietà `HeatmapOptions`:
 
 A fully masked field requires both Min and Max explicit; it can show a colorbar without cells. The mask is not copied: do not mutate field/Mask during rendering. The 100000 limit applies to all cells, not only the visible ones. Tooltips remain indexed `[row,column]`; Extent changes the ticks, not the matrix nor the number of cells. The gallery adds `physical-field.svg`.
 
-## Contour e quiver
+## Contour and quiver
 
 ```csharp
 var svg = Charts.Heatmap(new double[,] { { 0, 1 }, { 1, 2 } },
     new() {
-        Title = "Campo", ContourLevels = [0.5, 1.5], ContourColor = "#ffffff",
+        Title = "Field", ContourLevels = [0.5, 1.5], ContourColor = "#ffffff",
         Vectors = new Charts.VectorField(
             new double[,] { { 1, 1 }, { 1, 1 } },
             new double[,] { { 0, 0.5 }, { 0, 0.5 } }, Scale: 0.25)
@@ -273,7 +273,7 @@ dotnet run --project src/tools/PlotSharp.Inventory/PlotSharp.Inventory.csproj --
 
 The tool writes exclusively `ops/inventory/files.csv`, `public-declarations.csv`, `notebook-calls.csv`, `references.csv`; it does not change the snapshots or the manifest. It is a lexical scanner: public lines and Chart/Charts/IndexedCharts/plt calls in code cells, not a semantic compatibility verification. It does not include the `.ralfai/undo` backups in the analysis of the current consumers. See ARCHITECTURE for limits and the destination matrix.
 
-## Migrazione futura
+## Future migration
 
 - NavierStokes line/scatter: replace namespace `NavierStokes.Core` with `PlotSharp` where these APIs are used; do not yet remove FieldPlot/FieldToPng.
 - MathemaSharp: use `IndexedCharts.Line` and `IndexedCharts.Lines/Panels`, passing the result to the kernel's HTML display. The facade supports Start, Dashed and Stems with an optional band. Table/Tiles/Quote are presentation, not Charts.

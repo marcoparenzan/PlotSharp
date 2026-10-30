@@ -31,20 +31,20 @@ public static class InventoryScanner
     public static (string Destination, string Status) Map(string path, string declaration)
     {
         if (path.Contains("NDSharp.Plot", StringComparison.Ordinal))
-            return ("P05: facade Figure/Axes + backend raster/adattatore dati", "Non consolidato; confrontare API");
+            return ("P05: Figure/Axes facade + raster backend/data adapter", "Not consolidated; compare APIs");
         if (path.EndsWith("Charts.csx", StringComparison.Ordinal))
         {
-            if (Regex.IsMatch(declaration, @"\b(Lines|Panels|Stems)\s*\(")) return ("IndexedCharts", "Parziale: firma/display/NaN/scale differenti");
-            if (declaration.Contains("record Line")) return ("IndexedCharts.Line", "Parziale: adattamento namespace e contratto");
-            return ("P01: presentazione host / da classificare", "Non consolidato; esclusione da approvare");
+            if (Regex.IsMatch(declaration, @"\b(Lines|Panels|Stems)\s*\(")) return ("IndexedCharts", "Partial: signature/display/NaN/scale differ");
+            if (declaration.Contains("record Line")) return ("IndexedCharts.Line", "Partial: namespace and contract adaptation");
+            return ("P01: host presentation / to be classified", "Not consolidated; exclusion to be approved");
         }
         if (path.EndsWith("Charts.cs", StringComparison.Ordinal) && path.Contains("NavierStokes"))
         {
-            if (Regex.IsMatch(declaration, @"\b(LineChart|NiceTicks|Num|Series|LineChartOptions)\b")) return ("PlotSharp.Charts", "Estratto/adattato; equivalenza completa non verificata");
-            if (declaration.Contains("MarchingSquares")) return ("Charts.MarchingSquares", "Adattato: Segment eager, mask, degeneri");
-            if (declaration.Contains("FieldPlot") || declaration.Contains("FieldToPng")) return ("Heatmap/overlay + P05 raster", "Parziale SVG; API e PNG originali non sostituiti");
-            return ("P01: confronto palette/opzioni", "Da classificare");
+            if (Regex.IsMatch(declaration, @"\b(LineChart|NiceTicks|Num|Series|LineChartOptions)\b")) return ("PlotSharp.Charts", "Extracted/adapted; full equivalence not verified");
+            if (declaration.Contains("MarchingSquares")) return ("Charts.MarchingSquares", "Adapted: eager Segment, mask, degenerate cases");
+            if (declaration.Contains("FieldPlot") || declaration.Contains("FieldToPng")) return ("Heatmap/overlay + P05 raster", "Partial SVG; original APIs and PNG not replaced");
+            return ("P01: palette/options comparison", "To be classified");
         }
-        return ("P01: classificazione puntuale", "Da classificare");
+        return ("P01: point-by-point classification", "To be classified");
     }
 }

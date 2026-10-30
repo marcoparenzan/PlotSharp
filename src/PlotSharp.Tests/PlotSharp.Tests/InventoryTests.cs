@@ -17,6 +17,6 @@ public class InventoryTests
     [Fact] public void MappingDoesNotClaimFullCompatibility()
     {
         var map = InventoryScanner.Map("src/imports/MathemaSharp/notebooks/shared/Charts.csx", "public static void Lines(string title)");
-        Assert.Equal("IndexedCharts", map.Destination); Assert.StartsWith("Parziale", map.Status);
+        Assert.Equal("IndexedCharts", map.Destination); Assert.StartsWith("Partial", map.Status);
     }
 }

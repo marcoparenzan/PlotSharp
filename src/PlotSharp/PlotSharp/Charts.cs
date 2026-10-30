@@ -4,12 +4,12 @@ using System.Text;
 namespace PlotSharp;
 
 /// <summary>
-/// Renderer SVG line/scatter estratto dallo snapshot NavierStokes.Core/Charts.cs.
-/// Uso sperimentale interno: provenienza e vincoli di distribuzione in ARCHITECTURE.md.
+/// SVG line/scatter renderer extracted from the NavierStokes.Core/Charts.cs snapshot.
+/// Experimental internal use: provenance and distribution constraints in ARCHITECTURE.md.
 /// </summary>
 public static partial class Charts
 {
-    // Palette (tema chiaro)
+        // Palette (light theme)
     public const string Surface = "#fcfcfb";
     public const string Ink = "#0b0b0b";
     public const string InkSecondary = "#52514e";
@@ -166,7 +166,7 @@ public static partial class Charts
         if (pointOverlays.Length > 0)
             sb.Append("<g class='point-overlays'>").Append(pointOverlays).Append("</g>");
 
-        // Legenda (solo con più serie)
+        // Legend (only with several series)
         if (series.Count > 1)
         {
             double lx = left + pw;
@@ -187,7 +187,7 @@ public static partial class Charts
         return sb.ToString();
     }
 
-    // ───────────────────────── utilità ─────────────────────────
+    // ───────────────────────── utilities ─────────────────────────
 
     private static void Header(StringBuilder sb, int w, int h, string title, string subtitle)
     {
