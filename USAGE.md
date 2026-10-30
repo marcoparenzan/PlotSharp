@@ -23,6 +23,13 @@ chart an empty or non-numeric cell becomes a gap; scatter drops such rows. Exit 
 Build and test from source: `dotnet build src/PlotSharp.slnx` and `dotnet test src/PlotSharp.slnx`. Most users get PlotSharp
 indirectly through `NDSharp.Plot`. The suite installer can download the package: `D:\Dev\Science\ScienceSharp\Install-Suite.ps1 -Download`.
 
+## Reproducible SVG
+
+The SVG a chart writes is the same on every run: clip paths and gradients get ids that are a hash of the chart's own geometry or colour stops (`SvgId`), not a
+random GUID, so saved notebooks do not change when they are re-executed. Charts with the same geometry therefore share ids. When several charts end up in
+one SVG or HTML document, give each a different `LineChartOptions.IdSeed` to keep the ids unique there; `IndexedCharts.Panels` does it for you (panel index).
+Package `0.1.1-net11-preview.2` is the first with this behaviour.
+
 ## Current complete baseline after ND filled sampling/bands
 
 Science gate --no-images D:\Dev\BuildArtifacts\ecosystem-validation\20261028-215324 passed31/31 after the latest ND sampler/band changes. All build/test/audit/kernel/notebook/UI/browser/numerical checks ran; no new review image files or screenshots, encoded notebook outputs and in-memory QA retained.
