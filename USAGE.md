@@ -281,3 +281,6 @@ The tool writes exclusively `ops/inventory/files.csv`, `public-declarations.csv`
 - JupyterSharp: display host and assembly distribution, not the source of a new renderer. Do not replace DLLs in the snapshots.
 
 These are planning instructions, not migrations already carried out.
+
+### Geometry dependency
+Source installation/build now requires sibling MathemaSharp/src/libs/MathemaSharp.Geometry. Existing contour APIs stay unchanged. No updated packages have been published or installed.

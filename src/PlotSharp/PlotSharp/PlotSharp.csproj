@@ -4,9 +4,12 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.1.1-net11-preview.2</Version>
+    <Version>0.1.1-net11-preview.3</Version>
     <Authors>Marco Parenzan</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Description>PlotSharp: dependency-free (BCL only) charts rendered to SVG, HTML and PNG, plus shared contour kernels.</Description>
+    <Description>PlotSharp: charts rendered to SVG, HTML and PNG; contour mathematics delegated to the BCL-only MathemaSharp.Geometry engine.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../../MathemaSharp/src/libs/MathemaSharp.Geometry/MathemaSharp.Geometry.csproj" />
+  </ItemGroup>
 </Project>
