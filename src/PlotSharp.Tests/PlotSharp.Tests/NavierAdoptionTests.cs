@@ -36,7 +36,7 @@ public class NavierAdoptionTests
     [Fact]
     public void CavityReportsUseSharedPointAndLegendPolicies()
     {
-        var cavity=new CavitySolver(17,100);cavity.Run(40);
+        var cavity=new CavitySolver<double>(17,100);cavity.Run(40);
         var ghia=XElement.Parse(Reports.CavityGhia(cavity));
         XNamespace ns="http://www.w3.org/2000/svg";
         Assert.Equal("720",ghia.Attribute("width")!.Value);
@@ -48,7 +48,7 @@ public class NavierAdoptionTests
     [Fact]
     public void CylinderProbeRemainsAnExecutableReport()
     {
-        var cylinder=new CylinderLbm(100,80,40,8);cylinder.Run(40);
+        var cylinder=new CylinderLbm<double>(100,80,40,8);cylinder.Run(40);
         Assert.NotEmpty(cylinder.ProbeV);
         var svg=XElement.Parse(Reports.CylinderProbe(cylinder));
         Assert.Contains(svg.Descendants(),e=>e.Name.LocalName=="title");
@@ -57,7 +57,7 @@ public class NavierAdoptionTests
     [Fact]
     public void PreCancelledCavityRunDoesNotAdvance()
     {
-        var solver = new CavitySolver(17, 100);
+        var solver = new CavitySolver<double>(17, 100);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var error = Assert.Throws<OperationCanceledException>(() => solver.Run(10, cancellation: cancellation.Token));
@@ -68,7 +68,7 @@ public class NavierAdoptionTests
     [Fact]
     public void CavityCanResumeAfterCancellationWithFreshToken()
     {
-        var solver = new CavitySolver(17, 100);
+        var solver = new CavitySolver<double>(17, 100);
         using var cancellation = new CancellationTokenSource();
         Assert.Throws<OperationCanceledException>(() => solver.Run(10, progress: s =>
         {
@@ -83,7 +83,7 @@ public class NavierAdoptionTests
     [Fact]
     public void PreCancelledCylinderRunDoesNotAdvance()
     {
-        var solver = new CylinderLbm(100, 80, 40, 8);
+        var solver = new CylinderLbm<double>(100, 80, 40, 8);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var error = Assert.Throws<OperationCanceledException>(() => solver.Run(10, cancellation: cancellation.Token));
@@ -94,7 +94,7 @@ public class NavierAdoptionTests
     [Fact]
     public void CylinderCanResumeAfterCancellationWithFreshToken()
     {
-        var solver = new CylinderLbm(100, 80, 40, 8);
+        var solver = new CylinderLbm<double>(100, 80, 40, 8);
         using var cancellation = new CancellationTokenSource();
         Assert.Throws<OperationCanceledException>(() => solver.Run(10, progress: s =>
         {

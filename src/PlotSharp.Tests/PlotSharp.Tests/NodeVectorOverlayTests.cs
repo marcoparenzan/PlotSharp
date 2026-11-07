@@ -80,7 +80,7 @@ public class NodeVectorOverlayTests
     [Fact]
     public void ProductionPressureReportStillContainsVectorGeometry()
     {
-        var cavity = new CavitySolver(17, 100); cavity.Run(40);
+        var cavity = new CavitySolver<double>(17, 100); cavity.Run(40);
         var svg = XElement.Parse(Reports.CavityPressure(cavity));
         var path = svg.Elements().Single(e => e.Name.LocalName == "path" && e.Attribute("stroke-opacity")?.Value == "0.75");
         Assert.Contains("M", path.Attribute("d")!.Value);
